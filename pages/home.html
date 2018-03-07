@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<title>Pro</title>
+
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Varela+Round|Open+Sans">
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.8/css/all.css">
+		<link rel="stylesheet" href="/assets/css/app.css">
+	</head>
+	<body>
+		<div class="app" id="app">
+			<nav class="navbar is-fixed-top is-transparent">
+				<div class="navbar-brand">
+					<a class="navbar-item" href="https://bulma.io">
+						<img src="https://bulma.io/images/bulma-logo.png" alt="Bulma: a modern CSS framework based on Flexbox" width="112" height="28">
+					</a>
+
+					<div @click="toggleNav" v-bind:class="{ 'is-active': isNavOpen }" class="navbar-burger burger" data-target="thenav">
+						<span></span>
+						<span></span>
+						<span></span>
+					</div>
+				</div>
+
+				<div v-bind:class="{ 'is-active': isNavOpen }" id="thenav" class="navbar-menu">
+					<div class="navbar-start">
+						<a @click.prevent="load('homepage')" class="navbar-item" href="/">Home</a>
+						<div class="navbar-item">
+							<a @click.prevent="load('tasks')" class="navbar-item" href="/">Tasks</a>
+						</div>
+						<div class="navbar-item">
+							<a @click.prevent="load('groups')" class="navbar-item" href="/">Groups</a>
+						</div>
+					</div>
+
+					<div class="navbar-end">
+						<div class="navbar-item">
+							<div class="field is-grouped">
+								<p class="control">
+									<a @click.prevent="loginModal" class="button is-primary" href="https://github.com/jgthms/bulma/archive/0.5.1.zip">
+										<span class="icon">
+											<i class="fas fa-sign-in-alt"></i>
+										</span>
+										<span>Login</span>
+									</a>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</nav>
+
+			<keep-alive>
+				<component v-bind:is="currentView"></component>
+			</keep-alive>
+
+			<task-create-modal></task-create-modal>
+			<task-edit-modal></task-edit-modal>
+
+			<group-create-modal></group-create-modal>
+			<group-edit-modal></group-edit-modal>
+
+			<login-modal></login-modal>
+		</div>
+
+		<script type="text/template" id="homepage-template">
+			<div class="page">
+				<section class="section">
+					<div class="container is-fluid">
+						<h1 class="title">Pro (Homepage)</h1>
+						<group-list></group-list>
+					</div>
+				</section>
+			</div>
+		</script>
+
+		<script type="text/template" id="taskspage-template">
+			<div class="page">
+				<section class="section">
+					<div class="container is-fluid">
+						<h1 class="title">Pro (Task List)</h1>
+						<group-list></group-list>
+					</div>
+				</section>
+			</div>
+		</script>
+
+		<script type="text/template" id="groupspage-template">
+			<div class="page">
+				<section class="section">
+					<div class="container is-fluid">
+						<h1 class="title">Pro (Groups List)</h1>
+						<group-list></group-list>
+					</div>
+				</section>
+			</div>
+		</script>
+
+		<script type="text/template" id="group-list-template">
+			<div class="group-list">
+				<ul class="groups">
+					<li v-for="group in groups">
+						<task-list :group="group"></task-list>
+					</li>
+					<li>
+						<a @click.prevent="createNewGroup" class="add"><i class="fas fa-plus-circle"></i> Add Group</a>
+					</li>
+				</ul>
+			</div>
+		</script>
+
+		<script type="text/template" id="group-create-modal-template">
+			<div class="modal" v-bind:class="{ 'is-active': isActive }">
+				<div @click="close" class="modal-background"></div>
+				<div class="modal-card">
+					<header class="modal-card-head">
+						<p class="modal-card-title">Add new group</p>
+						<button class="delete" aria-label="close" @click="close"></button>
+					</header>
+					<section class="modal-card-body">
+						<form v-on:submit="send" class="form">
+							<div class="field">
+								<label class="label">Group label:</label>
+								<div class="control">
+									<input v-model="group.label" type="text" class="input" placeholder="Group label">
+								</div>
+							</div>
+							<div class="control">
+								<button class="button is-primary"><i class="fas fa-plus-circle"></i> Add</button>
+								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+							</div>
+						</form>
+					</section>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="group-edit-modal-template">
+			<div class="modal" v-bind:class="{ 'is-active': isActive }">
+				<div @click="close" class="modal-background"></div>
+				<div class="modal-card">
+					<header class="modal-card-head">
+						<p class="modal-card-title">Edit group</p>
+						<button class="delete" aria-label="close" @click="close"></button>
+					</header>
+					<section class="modal-card-body">
+						<form v-on:submit="send" class="form">
+							<div class="field">
+								<label class="label">Group label:</label>
+								<div class="control">
+									<input v-model="group.label" type="text" class="input" placeholder="Group label">
+								</div>
+							</div>
+							<div class="control">
+								<button class="button is-primary"><i class="fas fa-plus-circle"></i> Add</button>
+								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+							</div>
+						</form>
+					</section>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="task-list-template">
+			<div class="task-list">
+				<div class="task-label">${group.label}</div>
+				<ul class="tasks">
+					<li v-for="task in tasks">
+						<div @click.prevent="toggleTask(task)" v-bind:class="{ 'is-completed': task.completed }" class="task-item">${task.label}</div>
+						<a @click.prevent="editTask(task)" class="task-edit"><i class="fas fa-pen-square"></i></a>
+					</li>
+					<li>
+						<a @click.prevent="createNewTask" class="add"><i class="fas fa-plus-circle"></i> Add Task</a>
+					</li>
+				</ul>
+			</div>
+		</script>
+
+		<script type="text/template" id="task-create-modal-template">
+			<div class="modal" v-bind:class="{ 'is-active': isActive }">
+				<div @click="close" class="modal-background"></div>
+				<div class="modal-card">
+					<header class="modal-card-head">
+						<p class="modal-card-title">Add new task</p>
+						<button class="delete" aria-label="close" @click="close"></button>
+					</header>
+					<section class="modal-card-body">
+						<form v-on:submit="send" class="form">
+							<div class="field">
+								<label class="label">Task label:</label>
+								<div class="control">
+									<input v-model="task.label" type="text" class="input" placeholder="Task label">
+								</div>
+								<div class="control">
+									<label class="label">
+										Task Completed:
+										<input v-model="task.completed" type="checkbox">
+									</label>
+								</div>
+							</div>
+							<div class="control">
+								<button class="button is-primary"><i class="fas fa-plus-circle"></i> Add</button>
+								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+							</div>
+						</form>
+					</section>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="task-edit-modal-template">
+			<div class="modal" v-bind:class="{ 'is-active': isActive }">
+				<div @click="close" class="modal-background"></div>
+				<div class="modal-card">
+					<header class="modal-card-head">
+						<p class="modal-card-title">Edit task</p>
+						<button class="delete" aria-label="close" @click="close"></button>
+					</header>
+					<section class="modal-card-body">
+						<form v-on:submit="send" class="form">
+							<div class="field">
+								<label class="label">Task label:</label>
+								<div class="control">
+									<input v-model="task.label" type="text" class="input" placeholder="Task label">
+								</div>
+								<div class="control">
+									<label class="label">
+										Task Completed:
+										<input v-model="task.completed" type="checkbox">
+									</label>
+								</div>
+							</div>
+							<div class="control">
+								<button class="button is-primary"><i class="fas fa-plus-circle"></i> Add</button>
+								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+							</div>
+						</form>
+					</section>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="login-modal-template">
+			<div class="modal" v-bind:class="{ 'is-active': isActive }">
+				<div @click="close" class="modal-background"></div>
+				<div class="modal-content">
+					<div class="box">
+						<div class="title">Login</div>
+						<form v-on:submit="send" class="form">
+							<div class="field">
+								<div class="control">
+									<input v-model="creds.username" type="text" class="input" placeholder="Username">
+								</div>
+								<div class="control">
+									<input v-model="creds.password" type="password" class="input" placeholder="Password">
+								</div>
+							</div>
+							<div class="control">
+								<button class="button is-primary"><i class="fas fa-sign-in-alt"></i> Login</button>
+								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.0/vue.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
+		<script src="/assets/js/app.js"></script>
+	</body>
+</html>

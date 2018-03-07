@@ -12,6 +12,7 @@ func groupHandlers(r *mux.Router) {
 	r.HandleFunc("/api/groups/{id:[0-9]+}", groupsSingle)
 	r.HandleFunc("/api/groups/create", groupsCreate)
 	r.HandleFunc("/api/groups/{id:[0-9]+}/edit", groupsEdit)
+	r.HandleFunc("/api/groups/{id:[0-9]+}/delete", groupsDelete)
 }
 
 func groupsIndex(w http.ResponseWriter, r *http.Request) {
@@ -90,4 +91,25 @@ func groupsEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	jsonData(w, *group)
+}
+
+func groupsDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "405 - Method is not allowed.", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var group Group
+	err := json.NewDecoder(r.Body).Decode(&group)
+	if err != nil {
+		jsonError(w, err)
+		return
+	}
+
+	err = group.Delete()
+	if err != nil {
+		jsonError(w, err)
+		return
+	}
+	jsonData(w, group)
 }

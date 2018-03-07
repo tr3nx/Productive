@@ -117,6 +117,18 @@ Vue.component('group-edit-modal', {
 				this.close();
 			}
 		},
+		remove: function() {
+			axios.post("http://127.0.0.1:5100/api/groups/" + this.group.id + "/delete",
+				JSON.stringify(this.group),
+				{ headers : { 'Content-Type' : 'application/json' } })
+			.then(function(resp) {
+				if (resp.data.success) {
+					window.bus.$emit('group-removed', this.group);
+					this.close();
+				}
+			}.bind(this));
+			this.reset();
+		},
 		send: function(e) {
 			e.preventDefault();
 			axios.post("http://127.0.0.1:5100/api/groups/" + this.group.id + "/edit",
@@ -150,6 +162,7 @@ Vue.component('task-list', {
 	},
 	mounted: function() {
 		window.bus.$on('task-created', this.appendTask);
+		window.bus.$on('task-deleted', this.removeTask);
 	},
 	methods: {
 		fetchTasks:function(groupid) {
@@ -163,6 +176,13 @@ Vue.component('task-list', {
 		appendTask: function(task) {
 			if (task.groupid === this.group.id) {
 				this.tasks.push(task);
+			}
+		},
+		removeTask: function(task) {
+			if (this.group.id === task.groupid) {
+				this.tasks = this.tasks.filter(function(t) {
+					return (t.id !== task.id);
+				});
 			}
 		},
 		createNewTask: function() {
@@ -276,6 +296,18 @@ Vue.component('task-edit-modal', {
 				this.close();
 			}
 		},
+		remove: function() {
+			axios.post("http://127.0.0.1:5100/api/tasks/" + this.task.id + "/delete",
+				JSON.stringify(this.task),
+				{ headers : { 'Content-Type' : 'application/json' } })
+			.then(function(resp) {
+				if (resp.data.success) {
+					window.bus.$emit('task-deleted', resp.data.data);
+					this.close();
+				}
+			}.bind(this));
+			this.reset();
+		},
 		send: function(e) {
 			e.preventDefault();
 			axios.post("http://127.0.0.1:5100/api/tasks/" + this.task.id + "/edit",
@@ -345,17 +377,91 @@ Vue.component('login-modal', {
 	}
 });
 
+Vue.component('signup-modal', {
+	template: '#signup-modal-template',
+	delimiters: ['${', '}'],
+	data: function() {
+		return {
+			isActive: false,
+			creds : {}
+		}
+	},
+	mounted: function() {
+		bus.$on('signup-modal', this.show);
+		bus.$on('signup-modal-close', this.close);
+		document.addEventListener("keydown", this.esc);
+	},
+	beforeDestroy: function() {
+		bus.$off('signup-modal', this.show);
+		bus.$off('signup-modal-close', this.close);
+		document.removeEventListener("keydown", this.esc);
+	},
+	methods: {
+		show: function() {
+			this.isActive = true;
+		},
+		close: function() {
+			this.isActive = false;
+		},
+		esc: function(e) {
+			if (this.isActive && e.keyCode === 27) {
+				this.close();
+			}
+		},
+		send: function(e) {
+			e.preventDefault();
+			axios.post("http://127.0.0.1:5100/api/auth/signup",
+				JSON.stringify(this.creds),
+				{ headers : { 'Content-Type' : 'application/json' } })
+			.then(function(resp) {
+				if (resp.data.success) {
+					window.bus.$emit('logged-in', resp.data.data);
+					this.close();
+				}
+			}.bind(this));
+			this.reset();
+		},
+		reset: function() {
+			this.creds = {};
+		}
+	}
+});
+
 // pages
 var homepage = {
-	template: '#homepage-template'
+	template: '#homepage-template',
+	methods: {
+		loginModal: function() {
+			window.bus.$emit('login-modal');
+		},
+		signupModal: function() {
+			window.bus.$emit('signup-modal');
+		}
+	}
 };
 
 var tasks = {
-	template: '#taskspage-template'
+	template: '#taskspage-template',
+	methods: {
+		loginModal: function() {
+			window.bus.$emit('login-modal');
+		},
+		signupModal: function() {
+			window.bus.$emit('signup-modal');
+		}
+	}
 };
 
 var groups = {
-	template: '#groupspage-template'
+	template: '#groupspage-template',
+	methods: {
+		loginModal: function() {
+			window.bus.$emit('login-modal');
+		},
+		signupModal: function() {
+			window.bus.$emit('signup-modal');
+		}
+	}
 }
 
 // vue vm
@@ -379,7 +485,10 @@ var vm = new Vue({
 			this.currentView = page;
 		},
 		loginModal: function() {
-			window.bus.$emit('login-modal')
+			window.bus.$emit('login-modal');
+		},
+		signupModal: function() {
+			window.bus.$emit('signup-modal');
 		}
 	}
 });

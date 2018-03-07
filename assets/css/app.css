@@ -18,20 +18,39 @@ form.form .control {
 	margin-bottom: 20px;
 }
 
+.button.is-blank {
+	background-color: transparent;
+	border-color: transparent;
+	color: #fff;
+}
+	.button.is-blank:hover {
+		background-color: transparent;
+		border-color: transparent;
+		cursor: default;
+		color: #fff;
+	}
+
+	.button.is-blank.is-dark {
+		color: #141526;
+		background-color: transparent;
+	}
+		.button.is-blank.is-dark:hover {
+			color: #141526;
+			background-color: transparent;
+		}
+
 .page {
 	padding-top: 52px;
 }
 
 .group-list {}
-	.group-list {}
+	.group-list .group {
+		margin-bottom: 25px;
+	}
 
-.task-list {
-	margin-bottom: 25px;
-	border: 1px solid #141526;
-	border-radius: 6px;
-}
-	.task-list .task-label {
+	.group-list .group-label {
 		display: block;
+		position: relative;
 		padding: 10px;
 		font-weight: bold;
 		font-size: 18px;
@@ -39,84 +58,115 @@ form.form .control {
 		border-top-left-radius: 6px;
 		border-top-right-radius: 6px;
 		background-color: #141526;
+		cursor: default;
 	}
 
-	.task-list ul.tasks {
+	.group-list .group-label .group-edit {
+		display: inline-block;
+		position: absolute;
+		top: 9px;
+		right: 8px;
+		padding: 5px;
+		color: #fff;
+		font-size: 20px;
+		line-height: 1;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+		.group-list .group-label:hover .group-edit {
+			pointer-events: all;
+			opacity: 1;
+		}
+
+	.group-list > .add {
+		display: block;
+		padding: 10px;
+		color: #141526;
+		border-radius: 6px;
+		border: 2px dashed #ccc;
+		text-align: center;
+		transition: border-color 0.3s ease;
+	}
+		.group-list > .add:hover {
+			border-color: #141526;
+		}
+
+ul.tasks {
+	display: block;
+	position: relative;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: 1px solid #141526;
+}
+	ul.tasks > li {
 		display: block;
 		position: relative;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-		border-bottom-left-radius: 6px;
-		border-bottom-right-radius: 6px;
+		cursor: pointer;
 	}
-		.task-list ul.tasks > li {
-			display: block;
-			position: relative;
-			cursor: pointer;
+		ul.tasks > li > .task-item {
+			padding: 10px;
+			color: #141526;
+			border-bottom: 1px solid rgba(20, 21, 38, 0.2);
 		}
-			.task-list ul.tasks > li > .task-item {
+			ul.tasks > li:nth-child(even) > .task-item {
+				background-color: #f8f8f8;
+			}
+
+			ul.tasks > li:hover > .task-item {
+				background-color: #eee;
+				border-color: #141526;
+			}
+
+			ul.tasks > li > .task-item.is-completed {
+				background-color: #00d1b2;
+				color: #fff;
+			}
+
+			ul.tasks > li > .task-item.is-due {
+				background-color: #ffdd57;
+			}
+
+			ul.tasks > li > .task-item.is-late {
+				background-color: #ff3860;
+				color: #fff;
+			}
+
+		ul.tasks > li > .add {
+			display: block;
+			padding: 10px;
+			color: #141526;
+			border-radius: 6px;
+			border: 2px dashed #ccc;
+			text-align: center;
+			transition: border-color 0.3s ease;
+		}
+			ul.tasks > li > .add:hover {
+				border-color: #141526;
+			}
+
+			ul.tasks > li:last-of-type {
 				padding: 10px;
-				color: #141526;
-				border-bottom: 1px solid rgba(20, 21, 38, 0.2);
 			}
-				.task-list ul.tasks > li:nth-child(even) > .task-item {
-					background-color: #f8f8f8;
-				}
 
-				.task-list ul.tasks > li:hover > .task-item {
-					background-color: #eee;
-					border-color: #141526;
-				}
-
-				.task-list ul.tasks > li > .task-item.is-completed {
-					background-color: #00d1b2;
-					color: #fff;
-				}
-
-				.task-list ul.tasks > li > .task-item.is-due {
-					background-color: #ffdd57;
-				}
-
-				.task-list ul.tasks > li > .task-item.is-late {
-					background-color: #ff3860;
-					color: #fff;
-				}
- 
-			.task-list ul.tasks > li > .add {
-				display: block;
-				padding: 10px;
-				color: #141526;
-				border-radius: 6px;
-				border: 2px dashed #ccc;
-				text-align: center;
-				transition: border-color 0.3s ease;
+		ul.tasks > li > .task-edit {
+			display: inline-block;
+			position: absolute;
+			top: 7px;
+			right: 8px;
+			padding: 5px;
+			color: #141526;
+			font-size: 20px;
+			line-height: 1;
+			pointer-events: none;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+		}
+			ul.tasks > li:hover > .task-edit {
+				pointer-events: all;
+				opacity: 1;
 			}
-				.task-list ul.tasks > li > .add:hover {
-					border-color: #141526;
-				}
-
-				.task-list ul.tasks > li:last-of-type {
-					padding: 10px;
-				}
-
-			.task-list ul.tasks > li > .task-edit {
-				display: inline-block;
-				position: absolute;
-				top: 7px;
-				right: 8px;
-				padding: 5px;
-				color: #141526;
-				font-size: 20px;
-				line-height: 1;
-				pointer-events: none;
-				opacity: 0;
-				transition: opacity 0.3s ease;
-			}
-				.task-list ul.tasks > li:hover > .task-edit {
-					pointer-events: all;
-					opacity: 1;
-				}
 
 .modal .modal-card-head {
 	padding: 15px 15px 10px;

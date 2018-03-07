@@ -34,6 +34,10 @@ func (t *Task) UpdateField(field string, change interface{}) error {
 	return db.UpdateField(t, field, change)
 }
 
+func (t *Task) Delete() error {
+	return db.DeleteStruct(t)
+}
+
 func (ts Tasks) SortByOrder() {
 	sort.Slice(ts, func(i, j int) bool {
 		return ts[i].Order < ts[j].Order

@@ -29,17 +29,22 @@
 				<div v-bind:class="{ 'is-active': isNavOpen }" id="thenav" class="navbar-menu">
 					<div class="navbar-start">
 						<a @click.prevent="load('homepage')" class="navbar-item" href="/">Home</a>
-						<div class="navbar-item">
-							<a @click.prevent="load('tasks')" class="navbar-item" href="/">Tasks</a>
-						</div>
-						<div class="navbar-item">
-							<a @click.prevent="load('groups')" class="navbar-item" href="/">Groups</a>
-						</div>
+						<a @click.prevent="load('tasks')" class="navbar-item" href="/">Tasks</a>
+						<a @click.prevent="load('groups')" class="navbar-item" href="/">Groups</a>
 					</div>
 
 					<div class="navbar-end">
 						<div class="navbar-item">
 							<div class="field is-grouped">
+								<p class="control">
+									<a @click.prevent="signupModal" class="button is-warning" href="https://github.com/jgthms/bulma/archive/0.5.1.zip">
+										<span class="icon">
+											<i class="fas fa-user-plus"></i>
+										</span>
+										<span>Sign up</span>
+									</a>
+								</p>
+
 								<p class="control">
 									<a @click.prevent="loginModal" class="button is-primary" href="https://github.com/jgthms/bulma/archive/0.5.1.zip">
 										<span class="icon">
@@ -65,16 +70,56 @@
 			<group-edit-modal></group-edit-modal>
 
 			<login-modal></login-modal>
+			<signup-modal></signup-modal>
 		</div>
 
+		<!-- Pages -->
 		<script type="text/template" id="homepage-template">
 			<div class="page">
-				<section class="section">
-					<div class="container is-fluid">
-						<h1 class="title">Pro (Homepage)</h1>
-						<group-list></group-list>
+				<section class="hero is-primary">
+					<div class="hero-body">
+						<div class="container">
+							<h2 class="subtitle">Welcome to the future of</h2>
+							<h1 class="title">Productivity <span class="tag is-info">(the app)</span></h1>
+							<p>Login to discover how <strong>Productive</strong> you really are!</p>
+							<br>
+							<p>
+								<a @click.prevent="loginModal" class="button is-info"><span class="icon"><i class="fas fa-sign-in-alt"></i></span> <span>Login now</span></a>
+								<span class="button is-blank">or</span>
+								<a @click.prevent="signupModal" class="button is-warning"><span class="icon"><i class="fas fa-user-plus"></i></span> <span>Sign up for free!</span></a>
+							</p>
+						</div>
 					</div>
 				</section>
+
+				<section class="section">
+					<div class="container">
+						<div class="content">
+							<h1>Maintain Productivity</h1>
+							<p>Lorem ipsum<sup><a>[1]</a></sup> dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub<sub>script</sub> works as well!</p>
+
+							<h2>Incredible Statistics</h2>
+							<p>Curabitur accumsan turpis pharetra <strong>augue tincidunt</strong> blandit. Quisque condimentum maximus mi, sit amet commodo arcu rutrum id. Proin pretium urna vel cursus venenatis. Suspendisse potenti. Etiam mattis sem rhoncus lacus dapibus facilisis. Donec at dignissim dui. Ut et neque nisl.</p>
+							<ul>
+								<li>In fermentum leo eu lectus mollis, quis dictum mi aliquet.</li>
+								<li>Morbi eu nulla lobortis, lobortis est in, fringilla felis.</li>
+								<li>Aliquam nec felis in sapien venenatis viverra fermentum nec lectus.</li>
+								<li>Ut non enim metus.</li>
+							</ul>
+						</div>
+					</div>
+				</section>
+
+				<footer class="footer">
+					<div class="container">
+						<div class="content has-text-centered">
+							<p>
+								<strong>&copy;</strong> <span>2018</span>
+								<strong>Productivity</strong> by <a href="https://haulnet.xyz">Haulnet</a>
+							</p>
+						</div>
+					</div>
+				</footer>
 			</div>
 		</script>
 
@@ -100,16 +145,21 @@
 			</div>
 		</script>
 
+		<!-- Groups -->
 		<script type="text/template" id="group-list-template">
 			<div class="group-list">
-				<ul class="groups">
-					<li v-for="group in groups">
-						<task-list :group="group"></task-list>
-					</li>
-					<li>
-						<a @click.prevent="createNewGroup" class="add"><i class="fas fa-plus-circle"></i> Add Group</a>
-					</li>
-				</ul>
+				<div class="columns is-multiline">
+					<div v-for="group in groups" class="column is-half-tablet is-one-third-desktop">
+						<div class="group">
+							<div class="group-label">
+								${group.label}
+								<a @click.prevent="editGroup(group)" class="group-edit"><span class="icon"><i class="fas fa-pen-square"></i></span></a>
+							</div>
+							<task-list :group="group"></task-list>
+						</div>
+					</div>
+				</div>
+				<a @click.prevent="createNewGroup" class="add"><span class="icon"><i class="fas fa-plus-circle"></i></span> <span>Add Group</span></a>
 			</div>
 		</script>
 
@@ -130,8 +180,8 @@
 								</div>
 							</div>
 							<div class="control">
-								<button class="button is-primary"><i class="fas fa-plus-circle"></i> Add</button>
-								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+								<a @click.prevent="close" class="button is-danger"><span class="icon"><i class="fas fa-minus-circle"></i></span> <span>Cancel</span></a>
+								<button class="button is-primary"><span class="icon"><i class="fas fa-plus-circle"></i></span> <span>Add</span></button>
 							</div>
 						</form>
 					</section>
@@ -154,10 +204,13 @@
 								<div class="control">
 									<input v-model="group.label" type="text" class="input" placeholder="Group label">
 								</div>
+								<div class="control">
+									<a @click.prevent="remove" class="button is-danger"><span class="icon"><i class="fas fa-trash-alt"></i></span> <span>Delete</span></a>
+								</div>
 							</div>
 							<div class="control">
-								<button class="button is-primary"><i class="fas fa-plus-circle"></i> Add</button>
-								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+								<a @click.prevent="close" class="button is-danger"><span class="icon"><i class="fas fa-minus-circle"></i></span> <span>Cancel</span></a>
+								<button class="button is-primary"><span class="icon"><i class="fas fa-plus-circle"></i></span> <span>Add</span></button>
 							</div>
 						</form>
 					</section>
@@ -165,19 +218,17 @@
 			</div>
 		</script>
 
+		<!-- Tasks -->
 		<script type="text/template" id="task-list-template">
-			<div class="task-list">
-				<div class="task-label">${group.label}</div>
-				<ul class="tasks">
-					<li v-for="task in tasks">
-						<div @click.prevent="toggleTask(task)" v-bind:class="{ 'is-completed': task.completed }" class="task-item">${task.label}</div>
-						<a @click.prevent="editTask(task)" class="task-edit"><i class="fas fa-pen-square"></i></a>
-					</li>
-					<li>
-						<a @click.prevent="createNewTask" class="add"><i class="fas fa-plus-circle"></i> Add Task</a>
-					</li>
-				</ul>
-			</div>
+			<ul class="tasks">
+				<li v-for="task in tasks">
+					<div @click.prevent="toggleTask(task)" v-bind:class="{ 'is-completed': task.completed }" class="task-item">${task.label}</div>
+					<a @click.prevent="editTask(task)" class="task-edit"><i class="fas fa-pen-square"></i></a>
+				</li>
+				<li>
+					<a @click.prevent="createNewTask" class="add"><span class="icon"><i class="fas fa-plus-circle"></i></span> <span>Add Task</span></a>
+				</li>
+			</ul>
 		</script>
 
 		<script type="text/template" id="task-create-modal-template">
@@ -203,8 +254,8 @@
 								</div>
 							</div>
 							<div class="control">
-								<button class="button is-primary"><i class="fas fa-plus-circle"></i> Add</button>
-								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+								<a @click.prevent="close" class="button is-danger"><span class="icon"><i class="fas fa-minus-circle"></i></span> <span>Cancel</span></a>
+								<button class="button is-primary"><span class="icon"><i class="fas fa-plus-circle"></i></span> <span>Add</span></button>
 							</div>
 						</form>
 					</section>
@@ -233,10 +284,13 @@
 										<input v-model="task.completed" type="checkbox">
 									</label>
 								</div>
+								<div class="control">
+									<a @click.prevent="remove" class="button is-danger"><span class="icon"><i class="fas fa-trash-alt"></i></span> <span>Delete</span></a>
+								</div>
 							</div>
 							<div class="control">
-								<button class="button is-primary"><i class="fas fa-plus-circle"></i> Add</button>
-								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+								<a @click.prevent="close" class="button is-danger"><span class="icon"><i class="fas fa-minus-circle"></i></span> <span>Cancel</span></a>
+								<button class="button is-primary"><span class="icon"><i class="fas fa-plus-circle"></i></span> <span>Add</span></button>
 							</div>
 						</form>
 					</section>
@@ -244,27 +298,73 @@
 			</div>
 		</script>
 
+		<!-- Auth -->
 		<script type="text/template" id="login-modal-template">
 			<div class="modal" v-bind:class="{ 'is-active': isActive }">
 				<div @click="close" class="modal-background"></div>
-				<div class="modal-content">
-					<div class="box">
-						<div class="title">Login</div>
+				<div class="modal-card">
+					<header class="modal-card-head">
+						<p class="modal-card-title">Login</p>
+						<button class="delete" aria-label="close" @click="close"></button>
+					</header>
+					<section class="modal-card-body">
 						<form v-on:submit="send" class="form">
 							<div class="field">
 								<div class="control">
+									<label class="label">Username:</label>
 									<input v-model="creds.username" type="text" class="input" placeholder="Username">
 								</div>
 								<div class="control">
+									<label class="label">Password:</label>
 									<input v-model="creds.password" type="password" class="input" placeholder="Password">
 								</div>
 							</div>
 							<div class="control">
-								<button class="button is-primary"><i class="fas fa-sign-in-alt"></i> Login</button>
-								<button @click.prevent="close" class="button is-danger"><i class="fas fa-minus-circle"></i> Cancel</button>
+								<button class="button is-primary"><span class="icon"><i class="fas fa-sign-in-alt"></i></span> <span>Login</span></button>
+								<span class="button is-dark is-blank">or</span>
+								<a @click="signupModal" class="button is-white"><span class="icon"><i class="fas fa-user-plus"></i></span> <span>Sign up</span></a></span>
 							</div>
 						</form>
-					</div>
+					</section>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="signup-modal-template">
+			<div class="modal" v-bind:class="{ 'is-active': isActive }">
+				<div @click="close" class="modal-background"></div>
+				<div class="modal-card">
+					<header class="modal-card-head">
+						<p class="modal-card-title">Sign Up</p>
+						<button class="delete" aria-label="close" @click="close"></button>
+					</header>
+					<section class="modal-card-body">
+						<form v-on:submit="send" class="form">
+							<div class="field">
+								<div class="control">
+									<label class="label">Username:</label>
+									<input v-model="creds.username" type="text" class="input" placeholder="Username">
+								</div>
+								<div class="control">
+									<label class="label">Email:</label>
+									<input v-model="creds.email" type="email" class="input" placeholder="Email">
+								</div>
+								<div class="control">
+									<label class="label">Password:</label>
+									<input v-model="creds.password" type="password" class="input" placeholder="Password">
+								</div>
+								<div class="control">
+									<label class="label">Confirm:</label>
+									<input v-model="creds.confirm" type="password" class="input" placeholder="Again">
+								</div>
+							</div>
+							<div class="control">
+								<button class="button is-warning"><span class="icon"><i class="fas fa-user-plus"></i></span> <span>Signup</span></button>
+								<span class="button is-dark is-blank">or</span>
+								<a @click="loginModal" class="button is-white"><span class="icon"><i class="fas fa-sign-in-alt"></i></span> <span>Login</span></a></span>
+							</div>
+						</form>
+					</section>
 				</div>
 			</div>
 		</script>

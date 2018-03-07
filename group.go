@@ -36,6 +36,10 @@ func (g *Group) UpdateField(field string, change interface{}) error {
 	return db.UpdateField(g, field, change)
 }
 
+func (g *Group) Delete() error {
+	return db.DeleteStruct(g)
+}
+
 func (gs Groups) SortByOrder() {
 	sort.Slice(gs, func(i, j int) bool {
 		return gs[i].Order < gs[j].Order

@@ -12,6 +12,7 @@ func taskHandlers(r *mux.Router) {
 	r.HandleFunc("/api/tasks/{id:[0-9]+}", tasksSingle)
 	r.HandleFunc("/api/tasks/create", tasksCreate)
 	r.HandleFunc("/api/tasks/{id:[0-9]+}/edit", tasksEdit)
+	r.HandleFunc("/api/tasks/{id:[0-9]+}/delete", tasksDelete)
 }
 
 func tasksIndex(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +84,7 @@ func tasksCreate(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err)
 		return
 	}
-	jsonData(w, *task)
+	jsonData(w, task)
 }
 
 func tasksEdit(w http.ResponseWriter, r *http.Request) {
@@ -137,5 +138,26 @@ func tasksEdit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	jsonData(w, *task)
+	jsonData(w, task)
+}
+
+func tasksDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "405 - Method is not allowed.", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var task Task
+	err := json.NewDecoder(r.Body).Decode(&task)
+	if err != nil {
+		jsonError(w, err)
+		return
+	}
+
+	err = task.Delete()
+	if err != nil {
+		jsonError(w, err)
+		return
+	}
+	jsonData(w, task)
 }

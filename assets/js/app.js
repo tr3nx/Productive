@@ -20,7 +20,7 @@ Vue.component('group-list', {
 			this.groups.push(group);
 		},
 		fetchGroups: function() {
-			axios.get("http://127.0.0.1:5100/api/groups?userid=" + this.$root.user.id)
+			axios.get("http://mindescalation.com:5100/api/groups?userid=" + this.$root.user.id)
 			.then(function(resp) {
 				if (resp.data.success) {
 					this.groups = resp.data.data;
@@ -69,7 +69,7 @@ Vue.component('group-create-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/groups/create",
+			axios.post("http://mindescalation.com:5100/api/groups/create",
 				JSON.stringify({
 					userid: vm.user.id,
 					order: this.group.order,
@@ -123,7 +123,7 @@ Vue.component('group-edit-modal', {
 			}
 		},
 		remove: function() {
-			axios.post("http://127.0.0.1:5100/api/groups/" + this.group.id + "/delete",
+			axios.post("http://mindescalation.com:5100/api/groups/" + this.group.id + "/delete",
 				JSON.stringify(this.group),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -136,7 +136,7 @@ Vue.component('group-edit-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/groups/" + this.group.id + "/edit",
+			axios.post("http://mindescalation.com:5100/api/groups/" + this.group.id + "/edit",
 				JSON.stringify(this.group),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -172,7 +172,7 @@ Vue.component('task-list', {
 	},
 	methods: {
 		fetchTasks:function(groupid) {
-			axios.get("http://127.0.0.1:5100/api/tasks?groupid=" + groupid)
+			axios.get("http://mindescalation.com:5100/api/tasks?groupid=" + groupid)
 			.then(function(resp) {
 				if (resp.data.success) {
 					this.tasks = resp.data.data;
@@ -202,7 +202,7 @@ Vue.component('task-list', {
 			if (task.completed) {
 				window.bus.$emit('task-completed', task);
 			}
-			axios.post("http://127.0.0.1:5100/api/tasks/" + task.id + "/edit",
+			axios.post("http://mindescalation.com:5100/api/tasks/" + task.id + "/edit",
 				JSON.stringify(task),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -249,7 +249,7 @@ Vue.component('task-create-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/tasks/create",
+			axios.post("http://mindescalation.com:5100/api/tasks/create",
 				JSON.stringify({
 					groupid: this.group.id,
 					userid: vm.user.id,
@@ -304,7 +304,7 @@ Vue.component('task-edit-modal', {
 			}
 		},
 		remove: function() {
-			axios.post("http://127.0.0.1:5100/api/tasks/" + this.task.id + "/delete",
+			axios.post("http://mindescalation.com:5100/api/tasks/" + this.task.id + "/delete",
 				JSON.stringify(this.task),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -317,7 +317,7 @@ Vue.component('task-edit-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/tasks/" + this.task.id + "/edit",
+			axios.post("http://mindescalation.com:5100/api/tasks/" + this.task.id + "/edit",
 				JSON.stringify(this.task),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -368,7 +368,7 @@ Vue.component('login-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/auth/login",
+			axios.post("http://mindescalation.com:5100/api/auth/login",
 				JSON.stringify(this.creds),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -424,7 +424,7 @@ Vue.component('signup-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/auth/signup",
+			axios.post("http://mindescalation.com:5100/api/auth/signup",
 				JSON.stringify(this.creds),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {

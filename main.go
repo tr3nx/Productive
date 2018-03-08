@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/asdine/storm"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -27,13 +27,13 @@ func dbConnect(path string, clean bool) *storm.DB {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	fmt.Println("[~] starting")
+	log.Println("[~] Productive app starting")
 
 	db = dbConnect(dbpath, false)
 	defer db.Close()
 
-	fmt.Println("[@] loading...")
+	log.Println("[@] Loading...")
 	handleHttp()
 
-	fmt.Println("[!] shutting down!")
+	log.Println("[!] Productive app shutting down!")
 }

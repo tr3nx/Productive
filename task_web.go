@@ -38,7 +38,6 @@ func tasksIndex(w http.ResponseWriter, r *http.Request) {
 		jsonData(w, tasks)
 		return
 	}
-
 	jsonData(w, TasksAll())
 }
 
@@ -47,6 +46,7 @@ func tasksSingle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "405 - Method is not allowed.", http.StatusMethodNotAllowed)
 		return
 	}
+
 	vars := mux.Vars(r)
 	dirtyid := vars["id"]
 	id, err := strconv.Atoi(dirtyid)

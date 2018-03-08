@@ -9,6 +9,20 @@ html, body {
 	padding: 20px;
 }
 
+.logo {
+	font-size: 1.5rem;
+	font-family: 'Varela Round', sans-serif;
+	color: #141526;
+	font-weight: 600;
+}
+	.logo .icon {
+		position: relative;
+		top: -2px;
+		left: -5px;
+		color: #00d1b2;
+		font-size: 1.5rem;
+	}
+
 h1.title {
 	font-family: 'Varela Round', sans-serif;
 	color: #141526;

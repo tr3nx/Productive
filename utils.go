@@ -3,15 +3,27 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
 )
 
-func HashPassword(pass string) string {
-	return pass
+const pool = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func randInt(min int, max int) int {
+	return min + rand.Intn(max-min)
+}
+
+func randomString(l int) string {
+	var b strings.Builder
+	for i := 0; i < l; i++ {
+		fmt.Fprintf(&b, "%v", string(pool[randInt(0, len(pool))]))
+	}
+	return b.String()
 }
 
 func jsonResponse(w http.ResponseWriter, data interface{}) {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"github.com/asdine/storm/q"
 )
 
@@ -11,27 +12,36 @@ type Credentials struct {
 	Confirm  string `json:"confirm"`
 }
 
-func NewCreds(username, password string) *Credentials {
+func NewCreds(username, email, password, confirm string) *Credentials {
 	return &Credentials{
 		Username: username,
+		Email:    email,
 		Password: password,
+		Confirm:  confirm,
 	}
 }
 
-func (c Credentials) Authenticate() (User, error) {
+func (creds Credentials) Authenticate() (User, error) {
 	var user User
-	err := db.Select(q.Eq("Username", c.Username), q.Eq("Password", HashPassword(c.Password))).First(&user)
+	err := db.Select(q.Eq("Username", creds.Username), q.Eq("Password", creds.Password)).First(&user)
 	if err != nil {
 		return user, err
 	}
 	return user, nil
 }
 
-func (c Credentials) Signup() (User, error) {
-	var user User
-	err := db.Select(q.Eq("Username", c.Username), q.Eq("Password", HashPassword(c.Password))).First(&user)
-	if err != nil {
-		return user, err
+func (creds Credentials) Signup() (User, error) {
+	err := db.One("Username", creds.Username, nil)
+	if err == nil {
+		return User{}, errors.New("Username already taken")
 	}
-	return user, nil
+	if creds.Password != creds.Confirm {
+		return User{}, errors.New("Passwords do not match")
+	}
+	user := NewUser(creds.Username, creds.Email, creds.Password)
+	err = user.Save()
+	if err != nil {
+		return User{}, err
+	}
+	return *user, nil
 }

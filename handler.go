@@ -8,18 +8,21 @@ import (
 
 func handleHttp() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", homeHandler)
 
 	taskHandlers(r)
 	groupHandlers(r)
 	authHandlers(r)
 
+	r.HandleFunc("/", appHandler)
+
 	fs := http.StripPrefix("/assets/", http.FileServer(http.Dir("assets/")))
 	r.PathPrefix("/assets/").Handler(fs)
+
+	log.Println("[@] Http listening...")
 
 	log.Fatal(http.ListenAndServe(":5100", r))
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	htmlResponse(w, renderTemplate("pages/home.html", nil))
+func appHandler(w http.ResponseWriter, r *http.Request) {
+	htmlResponse(w, renderTemplate("layouts/app.html", nil))
 }

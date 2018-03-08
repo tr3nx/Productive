@@ -1,5 +1,6 @@
 window.bus = new Vue();
 
+/* Group */
 Vue.component('group-list', {
 	template: '#group-list-template',
 	delimiters: ['${', '}'],
@@ -19,7 +20,7 @@ Vue.component('group-list', {
 			this.groups.push(group);
 		},
 		fetchGroups: function() {
-			axios.get("http://127.0.0.1:5100/api/groups")
+			axios.get("http://127.0.0.1:5100/api/groups?userid=" + this.$root.user.id)
 			.then(function(resp) {
 				if (resp.data.success) {
 					this.groups = resp.data.data;
@@ -69,15 +70,19 @@ Vue.component('group-create-modal', {
 		send: function(e) {
 			e.preventDefault();
 			axios.post("http://127.0.0.1:5100/api/groups/create",
-				JSON.stringify(this.group),
+				JSON.stringify({
+					userid: vm.user.id,
+					order: this.group.order,
+					label: this.group.label
+				}),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('group-created', resp.data.data);
 					this.close();
+					this.reset();
 				}
 			}.bind(this));
-			this.reset();
 		},
 		reset: function() {
 			this.group = {};
@@ -125,9 +130,9 @@ Vue.component('group-edit-modal', {
 				if (resp.data.success) {
 					window.bus.$emit('group-removed', this.group);
 					this.close();
+					this.reset();
 				}
 			}.bind(this));
-			this.reset();
 		},
 		send: function(e) {
 			e.preventDefault();
@@ -138,9 +143,9 @@ Vue.component('group-edit-modal', {
 				if (resp.data.success) {
 					window.bus.$emit('group-updated', resp.data.data);
 					this.close();
+					this.reset();
 				}
 			}.bind(this));
-			this.reset();
 		},
 		reset: function() {
 			this.group = {};
@@ -148,6 +153,7 @@ Vue.component('group-edit-modal', {
 	}
 });
 
+/* Task */
 Vue.component('task-list', {
 	template: '#task-list-template',
 	delimiters: ['${', '}'],
@@ -246,6 +252,7 @@ Vue.component('task-create-modal', {
 			axios.post("http://127.0.0.1:5100/api/tasks/create",
 				JSON.stringify({
 					groupid: this.group.id,
+					userid: vm.user.id,
 					label: this.task.label,
 					completed: this.task.completed
 				}),
@@ -254,9 +261,9 @@ Vue.component('task-create-modal', {
 				if (resp.data.success) {
 					window.bus.$emit('task-created', resp.data.data);
 					this.close();
+					this.reset();
 				}
 			}.bind(this));
-			this.reset();
 		},
 		reset: function() {
 			this.task = {};
@@ -304,9 +311,9 @@ Vue.component('task-edit-modal', {
 				if (resp.data.success) {
 					window.bus.$emit('task-deleted', resp.data.data);
 					this.close();
+					this.reset();
 				}
 			}.bind(this));
-			this.reset();
 		},
 		send: function(e) {
 			e.preventDefault();
@@ -317,9 +324,9 @@ Vue.component('task-edit-modal', {
 				if (resp.data.success) {
 					window.bus.$emit('task-updated', resp.data.data);
 					this.close();
+					this.reset();
 				}
 			}.bind(this));
-			this.reset();
 		},
 		reset: function() {
 			this.task = {};
@@ -327,6 +334,7 @@ Vue.component('task-edit-modal', {
 	}
 });
 
+/* Auth */
 Vue.component('login-modal', {
 	template: '#login-modal-template',
 	delimiters: ['${', '}'],
@@ -367,12 +375,18 @@ Vue.component('login-modal', {
 				if (resp.data.success) {
 					window.bus.$emit('logged-in', resp.data.data);
 					this.close();
+					this.reset();
 				}
 			}.bind(this));
-			this.reset();
 		},
 		reset: function() {
 			this.creds = {};
+		},
+		loginModal: function() {
+			window.bus.$emit('login-modal');
+		},
+		signupModal: function() {
+			window.bus.$emit('signup-modal');
 		}
 	}
 });
@@ -415,19 +429,25 @@ Vue.component('signup-modal', {
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
-					window.bus.$emit('logged-in', resp.data.data);
+					window.bus.$emit('signed-up', resp.data.data);
 					this.close();
+					this.reset();
 				}
 			}.bind(this));
-			this.reset();
 		},
 		reset: function() {
 			this.creds = {};
+		},
+		loginModal: function() {
+			window.bus.$emit('login-modal');
+		},
+		signupModal: function() {
+			window.bus.$emit('signup-modal');
 		}
 	}
 });
 
-// pages
+/* Pages */
 var homepage = {
 	template: '#homepage-template',
 	methods: {
@@ -452,43 +472,64 @@ var tasks = {
 	}
 };
 
-var groups = {
-	template: '#groupspage-template',
-	methods: {
-		loginModal: function() {
-			window.bus.$emit('login-modal');
-		},
-		signupModal: function() {
-			window.bus.$emit('signup-modal');
-		}
-	}
-}
-
-// vue vm
+/* Vue vm */
 var vm = new Vue({
 	el: '#app',
 	delimiters: ['${', '}'],
 	data: {
 		isNavOpen: false,
 		currentView: 'homepage',
+		isLoggedIn: false,
+		user: {},
 	},
 	components: {
 		homepage: homepage,
-		tasks: tasks,
-		groups: groups
+		tasks: tasks
+	},
+	mounted: function() {
+		window.bus.$on('logged-in', this.login);
+	},
+	created: function() {
+		this.checkSavedAuth();
+		this.setLastPage();
 	},
 	methods: {
 		toggleNav: function() {
 			this.isNavOpen = !this.isNavOpen;
 		},
-		load: function(page) {
+		loadPage: function(page) {
 			this.currentView = page;
+			sessionStorage.setItem('lastPage', page);
 		},
 		loginModal: function() {
 			window.bus.$emit('login-modal');
 		},
 		signupModal: function() {
 			window.bus.$emit('signup-modal');
+		},
+		login: function(user) {
+			this.isLoggedIn = true;
+			this.user = user;
+			sessionStorage.setItem('pro', JSON.stringify(user));
+		},
+		logout: function() {
+			this.isLoggedIn = false;
+			this.user = {};
+			this.loadPage('homepage');
+			sessionStorage.removeItem('pro');
+		},
+		checkSavedAuth: function() {
+			pre = JSON.parse(sessionStorage.getItem('pro'));
+			if (pre && pre.username !== "" && pre.token !== "") {
+				this.isLoggedIn = true;
+				this.user = pre;
+			}
+		},
+		setLastPage: function() {
+			last = sessionStorage.getItem('lastPage');
+			if (last !== undefined && last !== null && last !== "") {
+				this.currentView = last;
+			}
 		}
 	}
 });

@@ -56,14 +56,14 @@ func GroupsAll() Groups {
 	return groups
 }
 
-func GroupBy(field string, value interface{}) *Group {
+func GroupBy(field string, value interface{}) Group {
 	var group Group
 	err := db.One(field, value, &group)
 	if err != nil {
 		panic(err)
-		return &group
+		return group
 	}
-	return &group
+	return group
 }
 
 func GroupsBy(field string, value interface{}) Groups {

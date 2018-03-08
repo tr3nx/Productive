@@ -54,14 +54,14 @@ func TasksAll() Tasks {
 	return tasks
 }
 
-func TaskBy(field string, value interface{}) *Task {
+func TaskBy(field string, value interface{}) Task {
 	var task Task
 	err := db.One(field, value, &task)
 	if err != nil {
 		panic(err)
-		return &task
+		return task
 	}
-	return &task
+	return task
 }
 
 func TasksBy(field string, value interface{}) Tasks {

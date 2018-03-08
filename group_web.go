@@ -20,6 +20,24 @@ func groupsIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "405 - Method is not allowed.", http.StatusMethodNotAllowed)
 		return
 	}
+
+	dirtyuserid := r.URL.Query().Get("userid")
+	if dirtyuserid != "" {
+		userid, err := strconv.Atoi(dirtyuserid)
+		if err != nil {
+			jsonError(w, err)
+			return
+		}
+
+		var groups Groups
+		err = db.Find("Userid", userid, &groups)
+		if err != nil {
+			jsonError(w, err)
+			return
+		}
+		jsonData(w, groups)
+		return
+	}
 	jsonData(w, GroupsAll())
 }
 
@@ -28,6 +46,7 @@ func groupsSingle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "405 - Method is not allowed.", http.StatusMethodNotAllowed)
 		return
 	}
+
 	vars := mux.Vars(r)
 	dirtyid := vars["id"]
 	id, err := strconv.Atoi(dirtyid)
@@ -90,7 +109,7 @@ func groupsEdit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	jsonData(w, *group)
+	jsonData(w, group)
 }
 
 func groupsDelete(w http.ResponseWriter, r *http.Request) {

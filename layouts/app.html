@@ -15,29 +15,29 @@
 		<div class="app" id="app">
 			<nav class="navbar is-fixed-top is-transparent">
 				<div class="navbar-brand">
-					<a class="navbar-item" href="https://bulma.io">
-						<img src="https://bulma.io/images/bulma-logo.png" alt="Bulma: a modern CSS framework based on Flexbox" width="112" height="28">
+					<a @click.prevent="loadPage('homepage')" class="navbar-item logo">
+						<span class="icon">
+							<i class="fas fa-tasks"></i>
+						</span>
+						<span>Pro</span>
 					</a>
 
 					<div @click="toggleNav" v-bind:class="{ 'is-active': isNavOpen }" class="navbar-burger burger" data-target="thenav">
-						<span></span>
-						<span></span>
-						<span></span>
+						<span></span><span></span><span></span>
 					</div>
 				</div>
 
 				<div v-bind:class="{ 'is-active': isNavOpen }" id="thenav" class="navbar-menu">
 					<div class="navbar-start">
-						<a @click.prevent="load('homepage')" class="navbar-item" href="/">Home</a>
-						<a @click.prevent="load('tasks')" class="navbar-item" href="/">Tasks</a>
-						<a @click.prevent="load('groups')" class="navbar-item" href="/">Groups</a>
+						<a @click.prevent="loadPage('homepage')" class="navbar-item" href="/">Home</a>
+						<a v-show="isLoggedIn" @click.prevent="loadPage('tasks')" class="navbar-item" href="/">Tasks</a>
 					</div>
 
 					<div class="navbar-end">
 						<div class="navbar-item">
 							<div class="field is-grouped">
-								<p class="control">
-									<a @click.prevent="signupModal" class="button is-warning" href="https://github.com/jgthms/bulma/archive/0.5.1.zip">
+								<p v-show="!isLoggedIn" class="control">
+									<a @click.prevent="signupModal" class="button is-warning">
 										<span class="icon">
 											<i class="fas fa-user-plus"></i>
 										</span>
@@ -45,14 +45,23 @@
 									</a>
 								</p>
 
-								<p class="control">
-									<a @click.prevent="loginModal" class="button is-primary" href="https://github.com/jgthms/bulma/archive/0.5.1.zip">
+								<p v-show="!isLoggedIn" class="control">
+									<a @click.prevent="loginModal" class="button is-primary">
 										<span class="icon">
 											<i class="fas fa-sign-in-alt"></i>
 										</span>
 										<span>Login</span>
 									</a>
 								</p>
+
+								<div v-show="isLoggedIn" class="navbar-item has-dropdown is-hoverable">
+									<a class="navbar-link">${user.username}</a>
+									<div class="navbar-dropdown is-boxed is-right">
+										<a @click.prevent="loadPage('tasks')" class="navbar-item">Tasks</a>
+										<hr class="navbar-divider">
+										<a @click.prevent="logout" class="navbar-item">Logout</a>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -63,14 +72,19 @@
 				<component v-bind:is="currentView"></component>
 			</keep-alive>
 
-			<task-create-modal></task-create-modal>
-			<task-edit-modal></task-edit-modal>
+			<div class="modals">
+				<div v-show="isLoggedIn">
+					<task-create-modal></task-create-modal>
+					<task-edit-modal></task-edit-modal>
 
-			<group-create-modal></group-create-modal>
-			<group-edit-modal></group-edit-modal>
-
-			<login-modal></login-modal>
-			<signup-modal></signup-modal>
+					<group-create-modal></group-create-modal>
+					<group-edit-modal></group-edit-modal>
+				</div>
+				<div v-show="!isLoggedIn">
+					<login-modal></login-modal>
+					<signup-modal></signup-modal>
+				</div>
+			</div>
 		</div>
 
 		<!-- Pages -->
@@ -127,18 +141,7 @@
 			<div class="page">
 				<section class="section">
 					<div class="container is-fluid">
-						<h1 class="title">Pro (Task List)</h1>
-						<group-list></group-list>
-					</div>
-				</section>
-			</div>
-		</script>
-
-		<script type="text/template" id="groupspage-template">
-			<div class="page">
-				<section class="section">
-					<div class="container is-fluid">
-						<h1 class="title">Pro (Groups List)</h1>
+						
 						<group-list></group-list>
 					</div>
 				</section>

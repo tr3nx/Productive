@@ -14,52 +14,54 @@
 	<body>
 		<div class="app" id="app">
 			<nav class="navbar is-fixed-top is-transparent">
-				<div class="navbar-brand">
-					<a @click.prevent="loadPage('homepage')" class="navbar-item logo">
-						<span class="icon">
-							<i class="fas fa-tasks"></i>
-						</span>
-						<span>Pro</span>
-					</a>
+				<div class="container">
+					<div class="navbar-brand">
+						<a @click.prevent="loadPage('homepage')" class="navbar-item logo">
+							<span class="icon">
+								<i class="fas fa-tasks"></i>
+							</span>
+							<span>Pro</span>
+						</a>
 
-					<div @click="toggleNav" v-bind:class="{ 'is-active': isNavOpen }" class="navbar-burger burger" data-target="thenav">
-						<span></span><span></span><span></span>
-					</div>
-				</div>
-
-				<div v-bind:class="{ 'is-active': isNavOpen }" id="thenav" class="navbar-menu">
-					<div class="navbar-start">
-						<a @click.prevent="loadPage('homepage')" class="navbar-item" href="/">Home</a>
-						<a v-show="isLoggedIn" @click.prevent="loadPage('tasks')" class="navbar-item" href="/">Tasks</a>
+						<div @click="toggleNav" v-bind:class="{ 'is-active': isNavOpen }" class="navbar-burger burger" data-target="thenav">
+							<span></span><span></span><span></span>
+						</div>
 					</div>
 
-					<div class="navbar-end">
-						<div class="navbar-item">
-							<div class="field is-grouped">
-								<p v-show="!isLoggedIn" class="control">
-									<a @click.prevent="signupModal" class="button is-warning">
-										<span class="icon">
-											<i class="fas fa-user-plus"></i>
-										</span>
-										<span>Sign up</span>
-									</a>
-								</p>
+					<div v-bind:class="{ 'is-active': isNavOpen }" id="thenav" class="navbar-menu">
+						<div class="navbar-start">
+							<a @click.prevent="loadPage('homepage')" class="navbar-item" href="/">Home</a>
+							<a v-show="isLoggedIn" @click.prevent="loadPage('tasks')" class="navbar-item" href="/">Tasks</a>
+						</div>
 
-								<p v-show="!isLoggedIn" class="control">
-									<a @click.prevent="loginModal" class="button is-primary">
-										<span class="icon">
-											<i class="fas fa-sign-in-alt"></i>
-										</span>
-										<span>Login</span>
-									</a>
-								</p>
+						<div class="navbar-end">
+							<div class="navbar-item">
+								<div class="field is-grouped">
+									<p v-show="!isLoggedIn" class="control">
+										<a @click.prevent="signupModal" class="button is-warning">
+											<span class="icon">
+												<i class="fas fa-user-plus"></i>
+											</span>
+											<span>Sign up</span>
+										</a>
+									</p>
 
-								<div v-show="isLoggedIn" class="navbar-item has-dropdown is-hoverable">
-									<a class="navbar-link">${user.username}</a>
-									<div class="navbar-dropdown is-boxed is-right">
-										<a @click.prevent="loadPage('tasks')" class="navbar-item">Tasks</a>
-										<hr class="navbar-divider">
-										<a @click.prevent="logout" class="navbar-item">Logout</a>
+									<p v-show="!isLoggedIn" class="control">
+										<a @click.prevent="loginModal" class="button is-primary">
+											<span class="icon">
+												<i class="fas fa-sign-in-alt"></i>
+											</span>
+											<span>Login</span>
+										</a>
+									</p>
+
+									<div v-show="isLoggedIn" class="navbar-item has-dropdown is-hoverable">
+										<a class="navbar-link">${user.username}</a>
+										<div class="navbar-dropdown is-boxed is-right">
+											<a @click.prevent="loadPage('tasks')" class="navbar-item">Tasks</a>
+											<hr class="navbar-divider">
+											<a @click.prevent="logout" class="navbar-item">Logout</a>
+										</div>
 									</div>
 								</div>
 							</div>

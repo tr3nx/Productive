@@ -430,6 +430,7 @@ Vue.component('signup-modal', {
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('signed-up', resp.data.data);
+					this.$root.loadPage('tasks');
 					this.close();
 					this.reset();
 				}
@@ -498,8 +499,9 @@ var vm = new Vue({
 			this.isNavOpen = !this.isNavOpen;
 		},
 		loadPage: function(page) {
+			sessionStorage.setItem('previousPage', page);
 			this.currentView = page;
-			sessionStorage.setItem('lastPage', page);
+			sessionStorage.setItem('currentPage', page);
 		},
 		loginModal: function() {
 			window.bus.$emit('login-modal');
@@ -511,6 +513,7 @@ var vm = new Vue({
 			this.isLoggedIn = true;
 			this.user = user;
 			sessionStorage.setItem('pro', JSON.stringify(user));
+			this.currentView = "tasks";
 		},
 		logout: function() {
 			this.isLoggedIn = false;
@@ -526,7 +529,7 @@ var vm = new Vue({
 			}
 		},
 		setLastPage: function() {
-			last = sessionStorage.getItem('lastPage');
+			last = sessionStorage.getItem('currentPage');
 			if (last !== undefined && last !== null && last !== "") {
 				this.currentView = last;
 			}

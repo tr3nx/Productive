@@ -14,18 +14,26 @@ Vue.component('group-list', {
 	},
 	mounted: function() {
 		window.bus.$on('group-created', this.appendGroup);
+		window.bus.$on('group-deleted', this.removeGroup);
 	},
 	methods: {
-		appendGroup: function(group) {
-			this.groups.push(group);
-		},
 		fetchGroups: function() {
-			axios.get("http://mindescalation.com:5100/api/groups?userid=" + this.$root.user.id)
+			axios.get("http://127.0.0.1:5100/api/groups?userid=" + this.$root.user.id)
 			.then(function(resp) {
 				if (resp.data.success) {
 					this.groups = resp.data.data;
 				}
 			}.bind(this));
+		},
+		appendGroup: function(group) {
+			this.groups.push(group);
+		},
+		removeTask: function(task) {
+			if (this.group.id === task.groupid) {
+				this.tasks = this.tasks.filter(function(t) {
+					return (t.id !== task.id);
+				});
+			}
 		},
 		createNewGroup: function() {
 			window.bus.$emit('group-create-modal');
@@ -69,7 +77,7 @@ Vue.component('group-create-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://mindescalation.com:5100/api/groups/create",
+			axios.post("http://127.0.0.1:5100/api/groups/create",
 				JSON.stringify({
 					userid: vm.user.id,
 					order: this.group.order,
@@ -123,7 +131,7 @@ Vue.component('group-edit-modal', {
 			}
 		},
 		remove: function() {
-			axios.post("http://mindescalation.com:5100/api/groups/" + this.group.id + "/delete",
+			axios.post("http://127.0.0.1:5100/api/groups/" + this.group.id + "/delete",
 				JSON.stringify(this.group),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -136,7 +144,7 @@ Vue.component('group-edit-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://mindescalation.com:5100/api/groups/" + this.group.id + "/edit",
+			axios.post("http://127.0.0.1:5100/api/groups/" + this.group.id + "/edit",
 				JSON.stringify(this.group),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -172,7 +180,7 @@ Vue.component('task-list', {
 	},
 	methods: {
 		fetchTasks:function(groupid) {
-			axios.get("http://mindescalation.com:5100/api/tasks?groupid=" + groupid)
+			axios.get("http://127.0.0.1:5100/api/tasks?groupid=" + groupid)
 			.then(function(resp) {
 				if (resp.data.success) {
 					this.tasks = resp.data.data;
@@ -202,7 +210,7 @@ Vue.component('task-list', {
 			if (task.completed) {
 				window.bus.$emit('task-completed', task);
 			}
-			axios.post("http://mindescalation.com:5100/api/tasks/" + task.id + "/edit",
+			axios.post("http://127.0.0.1:5100/api/tasks/" + task.id + "/edit",
 				JSON.stringify(task),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -249,7 +257,7 @@ Vue.component('task-create-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://mindescalation.com:5100/api/tasks/create",
+			axios.post("http://127.0.0.1:5100/api/tasks/create",
 				JSON.stringify({
 					groupid: this.group.id,
 					userid: vm.user.id,
@@ -304,7 +312,7 @@ Vue.component('task-edit-modal', {
 			}
 		},
 		remove: function() {
-			axios.post("http://mindescalation.com:5100/api/tasks/" + this.task.id + "/delete",
+			axios.post("http://127.0.0.1:5100/api/tasks/" + this.task.id + "/delete",
 				JSON.stringify(this.task),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -317,7 +325,7 @@ Vue.component('task-edit-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://mindescalation.com:5100/api/tasks/" + this.task.id + "/edit",
+			axios.post("http://127.0.0.1:5100/api/tasks/" + this.task.id + "/edit",
 				JSON.stringify(this.task),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -368,7 +376,7 @@ Vue.component('login-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://mindescalation.com:5100/api/auth/login",
+			axios.post("http://127.0.0.1:5100/api/auth/login",
 				JSON.stringify(this.creds),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
@@ -424,13 +432,12 @@ Vue.component('signup-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://mindescalation.com:5100/api/auth/signup",
+			axios.post("http://127.0.0.1:5100/api/auth/signup",
 				JSON.stringify(this.creds),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('signed-up', resp.data.data);
-					this.$root.loadPage('tasks');
 					this.close();
 					this.reset();
 				}
@@ -489,17 +496,19 @@ var vm = new Vue({
 	},
 	mounted: function() {
 		window.bus.$on('logged-in', this.login);
+		window.bus.$on('signed-up', this.login);
 	},
 	created: function() {
 		this.checkSavedAuth();
-		this.setLastPage();
+		this.returnToPrevious();
 	},
 	methods: {
 		toggleNav: function() {
 			this.isNavOpen = !this.isNavOpen;
 		},
 		loadPage: function(page) {
-			sessionStorage.setItem('previousPage', page);
+			this.isNavOpen = false;
+			sessionStorage.setItem('previousPage', this.currentView);
 			this.currentView = page;
 			sessionStorage.setItem('currentPage', page);
 		},
@@ -511,15 +520,17 @@ var vm = new Vue({
 		},
 		login: function(user) {
 			this.isLoggedIn = true;
+			this.isNavOpen = false;
 			this.user = user;
 			sessionStorage.setItem('pro', JSON.stringify(user));
-			this.currentView = "tasks";
+			this.loadPage('tasks');
 		},
 		logout: function() {
 			this.isLoggedIn = false;
+			this.isNavOpen = false;
 			this.user = {};
-			this.loadPage('homepage');
 			sessionStorage.removeItem('pro');
+			this.loadPage('homepage');
 		},
 		checkSavedAuth: function() {
 			pre = JSON.parse(sessionStorage.getItem('pro'));
@@ -528,7 +539,8 @@ var vm = new Vue({
 				this.user = pre;
 			}
 		},
-		setLastPage: function() {
+		returnToPrevious: function() {
+			if ( ! this.isLoggedIn) { return; }
 			last = sessionStorage.getItem('currentPage');
 			if (last !== undefined && last !== null && last !== "") {
 				this.currentView = last;

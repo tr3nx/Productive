@@ -29,12 +29,7 @@ func groupsIndex(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var groups Groups
-		err = db.Find("Userid", userid, &groups)
-		if err != nil {
-			jsonError(w, err)
-			return
-		}
+		groups := GroupsBy("Userid", userid)
 		jsonData(w, groups)
 		return
 	}
@@ -75,7 +70,7 @@ func groupsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group := NewGroup(postdata.Userid, postdata.Order, postdata.Label)
+	group := NewGroup(postdata.Label, postdata.Userid, postdata.Order)
 
 	err = group.Save()
 	if err != nil {

@@ -2,34 +2,33 @@ package main
 
 import (
 	"errors"
-	"github.com/asdine/storm/q"
 )
 
 type Credentials struct {
 	Username string `json:"username"`
-	Email    string `json:"email"`
 	Password string `json:"password"`
+	Email    string `json:"email"`
 	Confirm  string `json:"confirm"`
 }
 
-func NewCreds(username, email, password, confirm string) *Credentials {
+func NewCreds(username, password, email, confirm string) *Credentials {
 	return &Credentials{
 		Username: username,
-		Email:    email,
 		Password: password,
+		Email:    email,
 		Confirm:  confirm,
 	}
 }
 
 func (creds Credentials) Authenticate() (User, error) {
+	var user User
 	if creds.Username == "" {
-		return User{}, errors.New("Username is required")
+		return user, errors.New("Username is required")
 	}
 	if creds.Password == "" {
-		return User{}, errors.New("Password is required")
+		return user, errors.New("Password is required")
 	}
-	var user User
-	err := db.Select(q.Eq("Username", creds.Username), q.Eq("Password", creds.Password)).First(&user)
+	err := db.QueryRow("SELECT id, username, token FROM users WHERE username=? AND password=?", creds.Username, creds.Password).Scan(&user.Id, &user.Username, &user.Token)
 	if err != nil {
 		return user, err
 	}
@@ -49,15 +48,15 @@ func (creds Credentials) Signup() (User, error) {
 	if creds.Password != creds.Confirm {
 		return User{}, errors.New("Passwords do not match")
 	}
-
-	err := db.One("Username", creds.Username, nil)
+	err := db.QueryRow("SELECT username FROM users WHERE username=?", creds.Username).Scan(nil)
 	if err == nil {
 		return User{}, errors.New("Username already taken")
 	}
-	user := NewUser(creds.Username, creds.Email, creds.Password)
+	var user *User
+	user = NewUser(creds.Username, creds.Email, creds.Password)
 	err = user.Save()
 	if err != nil {
-		return User{}, err
+		return *user, err
 	}
 	return *user, nil
 }

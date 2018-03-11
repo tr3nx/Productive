@@ -1,49 +1,150 @@
 package main
 
+import (
+	"fmt"
+	"log"
+	"time"
+	"strings"
+)
+
 type User struct {
-	Id       int    `json:"id" storm:"id,increment"`
+	Id       int    `json:"id"`
 	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Password string `json:"-"`
+	Email    string `json:"-"`
 	Token    string `json:"token"`
+	Created  int64  `json:"-"`
 }
 
 type Users []User
 
-func NewUser(username, email, password string) *User {
+var (
+	fields = []string{"id", "username", "password", "email", "token", "created"}
+)
+
+func init() {
+	dbRegisterMigration("UsersCreateTable", CreateUserTable)
+	log.Println("[#] User module loading...")
+}
+
+func NewUser(username, password, email string) *User {
 	return &User{
 		Username: username,
-		Email:    email,
 		Password: password,
+		Email:    email,
 		Token:    randomString(16),
+		Created:  time.Now().Unix(),
 	}
 }
 
 func (u *User) Save() error {
-	return db.Save(u)
+	stmt, err := db.Prepare(fmt.Sprintf("INSERT INTO users(%v) values(?, ?, ?, ?, ?)", strings.Join(fields[1:], "")))
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(u.Username, u.Password, u.Email, u.Token, u.Created)
+	if err != nil {
+		return err
+	}
+	_, err = res.LastInsertId()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *User) UpdateField(field string, change interface{}) error {
-	return db.UpdateField(u, field, change)
+	stmt, err := db.Prepare(fmt.Sprintf("UPDATE users %v SET %v=? WHERE id=?", strings.Join(fields, ""), field))
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(change, u.Id)
+	if err != nil {
+		return err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *User) Delete() error {
-	return db.DeleteStruct(u)
+	stmt, err := db.Prepare("DELETE FROM users WHERE id=?")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(u.Id)
+	if err != nil {
+		return err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateUserTable() error {
+	stmt, err := db.Prepare("CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `username` VARCHAR(64), `password` VARCHAR(255), `email` VARCHAR(64), `token` VARCHAR(64), `created` BIGINT)")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec()
+	if err != nil {
+		return err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DropUserTable() error {
+	stmt, err := db.Prepare("DROP TABLE `users`")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec()
+	if err != nil {
+		return err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func UsersAll() Users {
 	var users Users
-	err := db.All(&users)
+	rows, err := db.Query(fmt.Sprintf("SELECT %v FROM users", strings.Join(fields, "")))
 	if err != nil {
 		panic(err)
 		return users
+	}
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+		return users
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var user User
+		err = rows.Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.Token, &user.Created)
+		if err != nil {
+			panic(err)
+			return users
+		}
+		users = append(users, user)
 	}
 	return users
 }
 
 func UserBy(field string, value interface{}) User {
 	var user User
-	err := db.One(field, value, &user)
+	err := db.QueryRow(fmt.Sprintf("SELECT %v FROM users WHERE %s=?", strings.Join(fields, ""), field), value).Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.Token, &user.Created)
 	if err != nil {
 		panic(err)
 		return user
@@ -53,10 +154,25 @@ func UserBy(field string, value interface{}) User {
 
 func UsersBy(field string, value interface{}) Users {
 	var users Users
-	err := db.Find(field, value, &users)
+	rows, err := db.Query(fmt.Sprintf("SELECT %v FROM users WHERE %s=?", strings.Join(fields, ""), field), value)
 	if err != nil {
 		panic(err)
 		return users
+	}
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+		return users
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var user User
+		err = rows.Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.Token, &user.Created)
+		if err != nil {
+			panic(err)
+			return users
+		}
+		users = append(users, user)
 	}
 	return users
 }

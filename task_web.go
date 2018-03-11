@@ -29,12 +29,7 @@ func tasksIndex(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var tasks Tasks
-		err = db.Find("Groupid", groupid, &tasks)
-		if err != nil {
-			jsonError(w, err)
-			return
-		}
+		tasks := TasksBy("groupid", groupid)
 		jsonData(w, tasks)
 		return
 	}
@@ -68,7 +63,7 @@ func tasksCreate(w http.ResponseWriter, r *http.Request) {
 		Groupid   int    `json:"groupid"`
 		Order     int    `json:"order"`
 		Label     string `json:"label"`
-		Completed bool   `json:"completed,bool"`
+		Completed int64   `json:"completed"`
 	}{}
 
 	err := json.NewDecoder(r.Body).Decode(&postdata)
@@ -77,7 +72,7 @@ func tasksCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task := NewTask(postdata.Groupid, postdata.Userid, postdata.Order, postdata.Label, postdata.Completed)
+	task := NewTask(postdata.Label, postdata.Groupid, postdata.Userid, postdata.Order, postdata.Completed)
 
 	err = task.Save()
 	if err != nil {

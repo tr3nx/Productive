@@ -1,38 +1,31 @@
 package main
 
 import (
-	"github.com/asdine/storm"
+	"database/sql"
 	"log"
 	"math/rand"
 	"time"
 )
 
 var (
-	db     *storm.DB
+	db     *sql.DB
 	ip     = "127.0.0.1"
 	port   = "5000"
-	dbpath = "./database.db"
 )
 
-func dbConnect(path string, clean bool) *storm.DB {
-	if clean {
-		deleteIfExists(path)
-	}
-	db, err := storm.Open(path)
-	if err != nil {
-		panic(err)
-	}
-	return db
+func init() {
+	log.Println("=== Productive app starting")
+	rand.Seed(time.Now().UnixNano())
+	db = dbConnect()
+	log.Println("[+] Connected to database.")
+	log.Println("[$] Initializing modules...")
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-	log.Println("[~] Productive app starting")
-
-	db = dbConnect(dbpath, false)
 	defer db.Close()
 
-	log.Println("[@] Loading...")
+	dbMigrate()
+
 	handleHttp()
 
 	log.Println("[!] Productive app shutting down!")

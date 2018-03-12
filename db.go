@@ -3,8 +3,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	_ "github.com/go-sql-driver/mysql"
+	"log"
 )
 
 var Migrations map[string]interface{}
@@ -21,7 +21,7 @@ func dbConnect() *sql.DB {
 	return db
 }
 
-func dbRegisterMigration(name string, qryFunc func()(error)) {
+func dbRegisterMigration(name string, qryFunc func() error) {
 	Migrations[name] = qryFunc
 }
 

@@ -1,23 +1,13 @@
 package main
 
 import (
+	"errors"
+	"fmt"
+	"log"
+	"reflect"
 	"sort"
 	"time"
-	"fmt"
 )
-
-// CREATE TABLE `tasks` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `label` VARCHAR(255) NOT NULL, `groupid` INTEGER NOT NULL, `userid` INTEGER NOT NULL, `order` INTEGER NOT NULL, `completed` BIGINT NULL DEFAULT NULL, `created` BIGINT NOT NULL);
-var sqlCreateTasksTable = []string{
-	"CREATE TABLE `tasks` (",
-	"`id` INTEGER PRIMARY KEY AUTO_INCREMENT,",
-	"`label` VARCHAR(255) NOT NULL,",
-	"`groupid` INTEGER NOT NULL,",
-	"`userid` INTEGER NOT NULL,",
-	"`order` INTEGER NOT NULL,",
-	"`completed` BIGINT NULL DEFAULT NULL,",
-	"`created` BIGINT NOT NULL",
-	");",
-}
 
 type Task struct {
 	Id        int    `json:"id"`
@@ -25,11 +15,18 @@ type Task struct {
 	Groupid   int    `json:"groupid"`
 	Userid    int    `json:"userid"`
 	Order     int    `json:"order"`
-	Completed int64   `json:"completed"`
-	Created   int64   `json:"created"`
+	Completed int64  `json:"completed"`
+	Created   int64  `json:"created"`
 }
 
 type Tasks []Task
+
+var taskfields = []string{"id", "label", "groupid", "userid", "order", "completed", "created"}
+
+func init() {
+	dbRegisterMigration("TasksCreateTable", TasksCreateTable)
+	log.Println("[#] Tasks module loading...")
+}
 
 func NewTask(label string, groupid, userid, order int, completed int64) *Task {
 	return &Task{
@@ -38,12 +35,12 @@ func NewTask(label string, groupid, userid, order int, completed int64) *Task {
 		Userid:    userid,
 		Order:     order,
 		Completed: completed,
-		Created:  time.Now().Unix(),
+		Created:   time.Now().Unix(),
 	}
 }
 
 func (t *Task) Save() error {
-	stmt, err := db.Prepare("INSERT INTO tasks(label, groupid, userid, order, completed, created) values(?, ?, ?, ?, ?, ?)")
+	stmt, err := db.Prepare(fmt.Sprintf("INSERT INTO `tasks`(%v) values(?, ?, ?, ?, ?, ?)", joinFields(taskfields[1:])))
 	if err != nil {
 		return err
 	}
@@ -51,15 +48,16 @@ func (t *Task) Save() error {
 	if err != nil {
 		return err
 	}
-	_, err = res.LastInsertId()
+	id, err := res.LastInsertId()
 	if err != nil {
 		return err
 	}
+	t.Id = int(id)
 	return nil
 }
 
 func (t *Task) UpdateField(field string, change interface{}) error {
-	stmt, err := db.Prepare(fmt.Sprintf("UPDATE tasks SET %v=? WHERE id=?", field))
+	stmt, err := db.Prepare(fmt.Sprintf("UPDATE `tasks` SET `%v`=? WHERE `id`=?", field))
 	if err != nil {
 		return err
 	}
@@ -75,11 +73,43 @@ func (t *Task) UpdateField(field string, change interface{}) error {
 }
 
 func (t *Task) Delete() error {
-	stmt, err := db.Prepare("DELETE FROM tasks WHERE id=?")
+	stmt, err := db.Prepare("DELETE FROM `tasks` WHERE `id`=?")
 	if err != nil {
 		return err
 	}
 	res, err := stmt.Exec(t.Id)
+	if err != nil {
+		return err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func TasksCreateTable() error {
+	stmt, err := db.Prepare("CREATE TABLE `tasks` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `label` VARCHAR(255) NOT NULL, `groupid` INTEGER NOT NULL, `userid` INTEGER NOT NULL, `order` INTEGER NOT NULL, `completed` BIGINT NULL DEFAULT NULL, `created` BIGINT NOT NULL)")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec()
+	if err != nil {
+		return err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func TasksDropTable() error {
+	stmt, err := db.Prepare("DROP TABLE `tasks`")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec()
 	if err != nil {
 		return err
 	}
@@ -98,7 +128,7 @@ func (ts Tasks) SortByOrder() {
 
 func TasksAll() Tasks {
 	var tasks Tasks
-	rows, err := db.Query("SELECT id, label, groupid, userid, order, completed, created FROM tasks")
+	rows, err := db.Query(fmt.Sprintf("SELECT %v FROM `tasks`", joinFields(taskfields)))
 	if err != nil {
 		panic(err)
 		return tasks
@@ -121,37 +151,39 @@ func TasksAll() Tasks {
 	return tasks
 }
 
-func TaskBy(field string, value interface{}) Task {
+func TaskBy(field string, value interface{}) (Task, error) {
 	var task Task
-	err := db.QueryRow(fmt.Sprintf("SELECT id, label, groupid, userid, order, completed, created FROM tasks WHERE %s=?", field), value).Scan(&task.Id, &task.Label, &task.Groupid, &task.Userid, &task.Order, &task.Completed, &task.Created)
+	err := db.QueryRow(fmt.Sprintf("SELECT %v FROM `tasks` WHERE `%v`=?", joinFields(taskfields), field), value).Scan(&task.Id, &task.Label, &task.Groupid, &task.Userid, &task.Order, &task.Completed, &task.Created)
 	if err != nil {
-		panic(err)
-		return task
+		return task, err
 	}
-	return task
+	if reflect.DeepEqual(task, Task{}) {
+		return task, errors.New("No task found")
+	}
+	return task, nil
 }
 
-func TasksBy(field string, value interface{}) Tasks {
+func TasksBy(field string, value interface{}) (Tasks, error) {
 	var tasks Tasks
-	rows, err := db.Query(fmt.Sprintf("SELECT id, label, groupid, userid, order, completed, created FROM tasks WHERE %s=?", field), value)
+	rows, err := db.Query(fmt.Sprintf("SELECT %v FROM `tasks` WHERE `%v`=?", joinFields(taskfields), field), value)
 	if err != nil {
-		panic(err)
-		return tasks
+		return tasks, err
 	}
 	err = rows.Err()
 	if err != nil {
-		panic(err)
-		return tasks
+		return tasks, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var task Task
 		err = rows.Scan(&task.Id, &task.Label, &task.Groupid, &task.Userid, &task.Order, &task.Completed, &task.Created)
 		if err != nil {
-			panic(err)
-			return tasks
+			return tasks, err
 		}
 		tasks = append(tasks, task)
 	}
-	return tasks
+	if len(tasks) <= 0 {
+		return tasks, errors.New("No tasks found")
+	}
+	return tasks, nil
 }

@@ -26,6 +26,17 @@ func randomString(l int) string {
 	return b.String()
 }
 
+func joinFields(fields []string) string {
+	var b strings.Builder
+	for i, field := range fields {
+		b.WriteString("`" + field + "`")
+		if i < len(fields)-1 {
+			b.WriteString(", ")
+		}
+	}
+	return b.String()
+}
+
 func jsonResponse(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)

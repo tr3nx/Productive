@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func taskHandlers(r *mux.Router) {
@@ -29,7 +30,11 @@ func tasksIndex(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tasks := TasksBy("groupid", groupid)
+		tasks, err := TasksBy("groupid", groupid)
+		if err != nil {
+			jsonError(w, err)
+			return
+		}
 		jsonData(w, tasks)
 		return
 	}
@@ -49,7 +54,12 @@ func tasksSingle(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err)
 		return
 	}
-	jsonData(w, TaskBy("Id", id))
+	task, err := TaskBy("Id", id)
+	if err != nil {
+		jsonError(w, err)
+		return
+	}
+	jsonData(w, task)
 }
 
 func tasksCreate(w http.ResponseWriter, r *http.Request) {
@@ -59,11 +69,11 @@ func tasksCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	postdata := struct {
-		Userid    int    `json:"userid"`
-		Groupid   int    `json:"groupid"`
-		Order     int    `json:"order"`
 		Label     string `json:"label"`
-		Completed int64   `json:"completed"`
+		Groupid   int    `json:"groupid"`
+		Userid    int    `json:"userid"`
+		Order     int    `json:"order"`
+		Completed bool   `json:"completed"`
 	}{}
 
 	err := json.NewDecoder(r.Body).Decode(&postdata)
@@ -72,7 +82,12 @@ func tasksCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task := NewTask(postdata.Label, postdata.Groupid, postdata.Userid, postdata.Order, postdata.Completed)
+	var completed int64
+	if postdata.Completed {
+		completed = time.Now().Unix()
+	}
+
+	task := NewTask(postdata.Label, postdata.Groupid, postdata.Userid, postdata.Order, completed)
 
 	err = task.Save()
 	if err != nil {
@@ -88,46 +103,65 @@ func tasksEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	postdata := struct {
+		Label     string `json:"label"`
+		Groupid   int    `json:"groupid"`
+		Userid    int    `json:"userid"`
+		Order     int    `json:"order"`
+		Completed bool   `json:"completed"`
+	}{}
+
 	var err error
-	var newtask Task
-	err = json.NewDecoder(r.Body).Decode(&newtask)
+	err = json.NewDecoder(r.Body).Decode(&postdata)
 	if err != nil {
 		jsonError(w, err)
 		return
 	}
 
-	task := TaskBy("Id", newtask.Id)
+	vars := mux.Vars(r)
+	dirtyid := vars["id"]
+	id, err := strconv.Atoi(dirtyid)
+	if err != nil {
+		jsonError(w, err)
+		return
+	}
 
-	if task.Userid != newtask.Userid {
-		task.Userid = newtask.Userid
-		err = task.UpdateField("Userid", newtask.Userid)
+	task, err := TaskBy("Id", id)
+	if err != nil {
+		jsonError(w, err)
+		return
+	}
+
+	if task.Userid != postdata.Userid {
+		task.Userid = postdata.Userid
+		err = task.UpdateField("Userid", postdata.Userid)
 		if err != nil {
 			jsonError(w, err)
 			return
 		}
 	}
 
-	if task.Groupid != newtask.Groupid {
-		task.Groupid = newtask.Groupid
-		err = task.UpdateField("Groupid", newtask.Groupid)
+	if task.Groupid != postdata.Groupid {
+		task.Groupid = postdata.Groupid
+		err = task.UpdateField("Groupid", postdata.Groupid)
 		if err != nil {
 			jsonError(w, err)
 			return
 		}
 	}
 
-	if task.Label != newtask.Label {
-		task.Label = newtask.Label
-		err = task.UpdateField("Label", newtask.Label)
+	if task.Label != postdata.Label {
+		task.Label = postdata.Label
+		err = task.UpdateField("Label", postdata.Label)
 		if err != nil {
 			jsonError(w, err)
 			return
 		}
 	}
 
-	if task.Completed != newtask.Completed {
-		task.Completed = newtask.Completed
-		err = task.UpdateField("Completed", newtask.Completed)
+	if postdata.Completed {
+		task.Completed = time.Now().Unix()
+		err = task.UpdateField("Completed", task.Completed)
 		if err != nil {
 			jsonError(w, err)
 			return

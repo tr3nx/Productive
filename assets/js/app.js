@@ -14,7 +14,7 @@ Vue.component('group-list', {
 	},
 	mounted: function() {
 		window.bus.$on('group-created', this.appendGroup);
-		window.bus.$on('group-deleted', this.removeGroup);
+		window.bus.$on('group-removed', this.removeGroup);
 	},
 	methods: {
 		fetchGroups: function() {
@@ -28,12 +28,10 @@ Vue.component('group-list', {
 		appendGroup: function(group) {
 			this.groups.push(group);
 		},
-		removeTask: function(task) {
-			if (this.group.id === task.groupid) {
-				this.tasks = this.tasks.filter(function(t) {
-					return (t.id !== task.id);
-				});
-			}
+		removeGroup: function(group) {
+			this.groups = this.groups.filter(function(g) {
+				return (g.id !== group.id);
+			});
 		},
 		createNewGroup: function() {
 			window.bus.$emit('group-create-modal');

@@ -29,7 +29,11 @@ func groupsIndex(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		groups := GroupsBy("Userid", userid)
+		groups, err := GroupsBy("Userid", userid)
+		if err != nil {
+			jsonError(w, err)
+			return
+		}
 		jsonData(w, groups)
 		return
 	}
@@ -49,7 +53,12 @@ func groupsSingle(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err)
 		return
 	}
-	jsonData(w, GroupBy("Id", id))
+	group, err := GroupBy("Id", id)
+	if err != nil {
+		jsonError(w, err)
+		return
+	}
+	jsonData(w, group)
 }
 
 func groupsCreate(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +103,11 @@ func groupsEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group := GroupBy("Id", newgroup.Id)
+	group, err := GroupBy("Id", newgroup.Id)
+	if err != nil {
+		jsonError(w, err)
+		return
+	}
 
 	if group.Label != newgroup.Label {
 		group.Label = newgroup.Label

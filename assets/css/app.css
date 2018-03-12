@@ -15,6 +15,10 @@ html, body {
 	color: #141526;
 	font-weight: 600;
 }
+	.logo:hover span {
+		color: #00d1b2;
+	}
+
 	.logo .icon {
 		position: relative;
 		top: -2px;

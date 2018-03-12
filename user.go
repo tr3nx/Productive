@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"time"
-	"strings"
 )
 
 type User struct {
@@ -18,12 +17,10 @@ type User struct {
 
 type Users []User
 
-var (
-	fields = []string{"id", "username", "password", "email", "token", "created"}
-)
+var userfields = []string{"id", "username", "password", "email", "token", "created"}
 
 func init() {
-	dbRegisterMigration("UsersCreateTable", CreateUserTable)
+	dbRegisterMigration("UsersCreateTable", UsersCreateTable)
 	log.Println("[#] User module loading...")
 }
 
@@ -38,7 +35,7 @@ func NewUser(username, password, email string) *User {
 }
 
 func (u *User) Save() error {
-	stmt, err := db.Prepare(fmt.Sprintf("INSERT INTO users(%v) values(?, ?, ?, ?, ?)", strings.Join(fields[1:], "")))
+	stmt, err := db.Prepare(fmt.Sprintf("INSERT INTO `users`(%v) VALUES(?, ?, ?, ?, ?)", joinFields(userfields[1:])))
 	if err != nil {
 		return err
 	}
@@ -46,15 +43,16 @@ func (u *User) Save() error {
 	if err != nil {
 		return err
 	}
-	_, err = res.LastInsertId()
+	id, err := res.LastInsertId()
 	if err != nil {
 		return err
 	}
+	u.Id = int(id)
 	return nil
 }
 
 func (u *User) UpdateField(field string, change interface{}) error {
-	stmt, err := db.Prepare(fmt.Sprintf("UPDATE users %v SET %v=? WHERE id=?", strings.Join(fields, ""), field))
+	stmt, err := db.Prepare(fmt.Sprintf("UPDATE `users` %v SET `%v`=`?` WHERE `id`=?", joinFields(userfields), field))
 	if err != nil {
 		return err
 	}
@@ -70,7 +68,7 @@ func (u *User) UpdateField(field string, change interface{}) error {
 }
 
 func (u *User) Delete() error {
-	stmt, err := db.Prepare("DELETE FROM users WHERE id=?")
+	stmt, err := db.Prepare("DELETE FROM `users` WHERE `id`=?")
 	if err != nil {
 		return err
 	}
@@ -85,8 +83,8 @@ func (u *User) Delete() error {
 	return nil
 }
 
-func CreateUserTable() error {
-	stmt, err := db.Prepare("CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `username` VARCHAR(64), `password` VARCHAR(255), `email` VARCHAR(64), `token` VARCHAR(64), `created` BIGINT)")
+func UsersCreateTable() error {
+	stmt, err := db.Prepare("CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `username` VARCHAR(64) NOT NULL, `password` VARCHAR(255) NOT NULL, `email` VARCHAR(64) NOT NULL, `token` VARCHAR(64) NOT NULL, `created` BIGINT NOT NULL)")
 	if err != nil {
 		return err
 	}
@@ -101,7 +99,7 @@ func CreateUserTable() error {
 	return nil
 }
 
-func DropUserTable() error {
+func UsersDropTable() error {
 	stmt, err := db.Prepare("DROP TABLE `users`")
 	if err != nil {
 		return err
@@ -119,7 +117,7 @@ func DropUserTable() error {
 
 func UsersAll() Users {
 	var users Users
-	rows, err := db.Query(fmt.Sprintf("SELECT %v FROM users", strings.Join(fields, "")))
+	rows, err := db.Query(fmt.Sprintf("SELECT %v FROM `users`", joinFields(userfields)))
 	if err != nil {
 		panic(err)
 		return users
@@ -144,7 +142,7 @@ func UsersAll() Users {
 
 func UserBy(field string, value interface{}) User {
 	var user User
-	err := db.QueryRow(fmt.Sprintf("SELECT %v FROM users WHERE %s=?", strings.Join(fields, ""), field), value).Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.Token, &user.Created)
+	err := db.QueryRow(fmt.Sprintf("SELECT %v FROM `users` WHERE `%v`=?", joinFields(userfields), field), value).Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.Token, &user.Created)
 	if err != nil {
 		panic(err)
 		return user
@@ -154,7 +152,7 @@ func UserBy(field string, value interface{}) User {
 
 func UsersBy(field string, value interface{}) Users {
 	var users Users
-	rows, err := db.Query(fmt.Sprintf("SELECT %v FROM users WHERE %s=?", strings.Join(fields, ""), field), value)
+	rows, err := db.Query(fmt.Sprintf("SELECT %v FROM `users` WHERE `%v`=?", joinFields(userfields), field), value)
 	if err != nil {
 		panic(err)
 		return users

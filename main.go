@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	db     *sql.DB
-	ip     = "127.0.0.1"
-	port   = "5000"
+	db   *sql.DB
+	ip   = "127.0.0.1"
+	port = "5000"
 )
 
 func init() {

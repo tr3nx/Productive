@@ -18,7 +18,7 @@ Vue.component('group-list', {
 	},
 	methods: {
 		fetchGroups: function() {
-			axios.get("http://127.0.0.1:5100/api/groups?userid=" + this.$root.user.id)
+			axios.get(this.$root.settings.baseurl + "/api/groups?userid=" + this.$root.user.id)
 			.then(function(resp) {
 				if (resp.data.success) {
 					this.groups = resp.data.data;
@@ -52,13 +52,13 @@ Vue.component('group-create-modal', {
 		}
 	},
 	mounted: function() {
-		bus.$on('group-create-modal', this.show);
-		bus.$on('group-create-modal-close', this.close);
+		window.bus.$on('group-create-modal', this.show);
+		window.bus.$on('group-create-modal-close', this.close);
 		document.addEventListener("keydown", this.esc);
 	},
 	beforeDestroy: function() {
-		bus.$off('group-create-modal', this.show);
-		bus.$off('group-create-modal-close', this.close);
+		window.bus.$off('group-create-modal', this.show);
+		window.bus.$off('group-create-modal-close', this.close);
 		document.removeEventListener("keydown", this.esc);
 	},
 	methods: {
@@ -75,7 +75,7 @@ Vue.component('group-create-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/groups/create",
+			axios.post(this.$root.settings.baseurl + "/api/groups/create",
 				JSON.stringify({
 					userid: vm.user.id,
 					order: this.group.order,
@@ -85,6 +85,7 @@ Vue.component('group-create-modal', {
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('group-created', resp.data.data);
+					window.bus.$emit('notify', { message: "Group created" });
 					this.close();
 					this.reset();
 				}
@@ -106,13 +107,13 @@ Vue.component('group-edit-modal', {
 		}
 	},
 	mounted: function() {
-		bus.$on('group-edit-modal', this.show);
-		bus.$on('group-edit-modal-close', this.close);
+		window.bus.$on('group-edit-modal', this.show);
+		window.bus.$on('group-edit-modal-close', this.close);
 		document.addEventListener("keydown", this.esc);
 	},
 	beforeDestroy: function() {
-		bus.$off('group-edit-modal', this.show);
-		bus.$off('group-edit-modal-close', this.close);
+		window.bus.$off('group-edit-modal', this.show);
+		window.bus.$off('group-edit-modal-close', this.close);
 		document.removeEventListener("keydown", this.esc);
 	},
 	methods: {
@@ -129,12 +130,13 @@ Vue.component('group-edit-modal', {
 			}
 		},
 		remove: function() {
-			axios.post("http://127.0.0.1:5100/api/groups/" + this.group.id + "/delete",
+			axios.post(this.$root.settings.baseurl + "/api/groups/" + this.group.id + "/delete",
 				JSON.stringify(this.group),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('group-removed', this.group);
+					window.bus.$emit('notify', { message: "Group removed" });
 					this.close();
 					this.reset();
 				}
@@ -142,12 +144,13 @@ Vue.component('group-edit-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/groups/" + this.group.id + "/edit",
+			axios.post(this.$root.settings.baseurl + "/api/groups/" + this.group.id + "/edit",
 				JSON.stringify(this.group),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('group-updated', resp.data.data);
+					window.bus.$emit('notify', { message: "Group updated" });
 					this.close();
 					this.reset();
 				}
@@ -178,10 +181,17 @@ Vue.component('task-list', {
 	},
 	methods: {
 		fetchTasks:function(groupid) {
-			axios.get("http://127.0.0.1:5100/api/tasks?groupid=" + groupid)
+			axios.get(this.$root.settings.baseurl + "/api/tasks?groupid=" + groupid)
 			.then(function(resp) {
 				if (resp.data.success) {
 					this.tasks = resp.data.data;
+					this.tasks.forEach(function(item) {
+						if (item.completed > 0) {
+							item.completed = true;
+						} else {
+							item.completed = false;
+						}
+					});
 				}
 			}.bind(this));
 		},
@@ -204,16 +214,19 @@ Vue.component('task-list', {
 			window.bus.$emit('task-edit-modal', task);
 		},
 		toggleTask: function(task) {
-			task.completed = !task.completed;
-			if (task.completed) {
-				window.bus.$emit('task-completed', task);
-			}
-			axios.post("http://127.0.0.1:5100/api/tasks/" + task.id + "/edit",
+			task.complete = !task.complete;
+			axios.post(this.$root.settings.baseurl + "/api/tasks/" + task.id + "/edit",
 				JSON.stringify(task),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
-					window.bus.$emit('task-updated', resp.data.data);
+					if (task.completed) {
+						window.bus.$emit('task-completed', task);
+						window.bus.$emit('notify', { message: "Task completed!" });
+					} else {
+						window.bus.$emit('task-updated', resp.data.data);
+						window.bus.$emit('notify', { message: "Task not complete" });
+					}
 				}
 			}.bind(this));
 		}
@@ -231,13 +244,13 @@ Vue.component('task-create-modal', {
 		}
 	},
 	mounted: function() {
-		bus.$on('task-create-modal', this.show);
-		bus.$on('task-create-modal-close', this.close);
+		window.bus.$on('task-create-modal', this.show);
+		window.bus.$on('task-create-modal-close', this.close);
 		document.addEventListener("keydown", this.esc);
 	},
 	beforeDestroy: function() {
-		bus.$off('task-create-modal', this.show);
-		bus.$off('task-create-modal-close', this.close);
+		window.bus.$off('task-create-modal', this.show);
+		window.bus.$off('task-create-modal-close', this.close);
 		document.removeEventListener("keydown", this.esc);
 	},
 	methods: {
@@ -255,7 +268,7 @@ Vue.component('task-create-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/tasks/create",
+			axios.post(this.$root.settings.baseurl + "/api/tasks/create",
 				JSON.stringify({
 					groupid: this.group.id,
 					userid: vm.user.id,
@@ -266,6 +279,7 @@ Vue.component('task-create-modal', {
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('task-created', resp.data.data);
+					window.bus.$emit('notify', { message: "Task created" });
 					this.close();
 					this.reset();
 				}
@@ -310,12 +324,13 @@ Vue.component('task-edit-modal', {
 			}
 		},
 		remove: function() {
-			axios.post("http://127.0.0.1:5100/api/tasks/" + this.task.id + "/delete",
+			axios.post(this.$root.settings.baseurl + "/api/tasks/" + this.task.id + "/delete",
 				JSON.stringify(this.task),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('task-deleted', resp.data.data);
+					window.bus.$emit('notify', { message: "Task deleted" });
 					this.close();
 					this.reset();
 				}
@@ -323,12 +338,13 @@ Vue.component('task-edit-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/tasks/" + this.task.id + "/edit",
+			axios.post(this.$root.settings.baseurl + "/api/tasks/" + this.task.id + "/edit",
 				JSON.stringify(this.task),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('task-updated', resp.data.data);
+					window.bus.$emit('notify', { message: "Task updated" });
 					this.close();
 					this.reset();
 				}
@@ -351,13 +367,13 @@ Vue.component('login-modal', {
 		}
 	},
 	mounted: function() {
-		bus.$on('login-modal', this.show);
-		bus.$on('login-modal-close', this.close);
+		window.bus.$on('login-modal', this.show);
+		window.bus.$on('login-modal-close', this.close);
 		document.addEventListener("keydown", this.esc);
 	},
 	beforeDestroy: function() {
-		bus.$off('login-modal', this.show);
-		bus.$off('login-modal-close', this.close);
+		window.bus.$off('login-modal', this.show);
+		window.bus.$off('login-modal-close', this.close);
 		document.removeEventListener("keydown", this.esc);
 	},
 	methods: {
@@ -374,12 +390,13 @@ Vue.component('login-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/auth/login",
+			axios.post(this.$root.settings.baseurl + "/api/auth/login",
 				JSON.stringify(this.creds),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('logged-in', resp.data.data);
+					window.bus.$emit('notify', { message: "You are now logged in" });
 					this.close();
 					this.reset();
 				}
@@ -407,13 +424,13 @@ Vue.component('signup-modal', {
 		}
 	},
 	mounted: function() {
-		bus.$on('signup-modal', this.show);
-		bus.$on('signup-modal-close', this.close);
+		window.bus.$on('signup-modal', this.show);
+		window.bus.$on('signup-modal-close', this.close);
 		document.addEventListener("keydown", this.esc);
 	},
 	beforeDestroy: function() {
-		bus.$off('signup-modal', this.show);
-		bus.$off('signup-modal-close', this.close);
+		window.bus.$off('signup-modal', this.show);
+		window.bus.$off('signup-modal-close', this.close);
 		document.removeEventListener("keydown", this.esc);
 	},
 	methods: {
@@ -430,12 +447,13 @@ Vue.component('signup-modal', {
 		},
 		send: function(e) {
 			e.preventDefault();
-			axios.post("http://127.0.0.1:5100/api/auth/signup",
+			axios.post(this.$root.settings.baseurl + "/api/auth/signup",
 				JSON.stringify(this.creds),
 				{ headers : { 'Content-Type' : 'application/json' } })
 			.then(function(resp) {
 				if (resp.data.success) {
 					window.bus.$emit('signed-up', resp.data.data);
+					window.bus.$emit('notify', { message: "You have signed up" });
 					this.close();
 					this.reset();
 				}
@@ -449,6 +467,31 @@ Vue.component('signup-modal', {
 		},
 		signupModal: function() {
 			window.bus.$emit('signup-modal');
+		}
+	}
+});
+
+/* Notification */
+Vue.component('notifications', {
+	template: '#notifications-template',
+	delimiters: ['${', '}'],
+	data: function() {
+		return {
+			notes: []
+		}
+	},
+	mounted: function() {
+		window.bus.$on('notify', this.notify);
+	},
+	methods: {
+		notify: function(note) {
+			if (note.timeout === undefined) {
+				note.timeout = 5000;
+			}
+			this.notes.push(note);
+			setTimeout(function() {
+				this.notes.shift();
+			}.bind(this), note.timeout);
 		}
 	}
 });
@@ -483,6 +526,7 @@ var vm = new Vue({
 	el: '#app',
 	delimiters: ['${', '}'],
 	data: {
+		settings: proSettings,
 		isNavOpen: false,
 		currentView: 'homepage',
 		isLoggedIn: false,

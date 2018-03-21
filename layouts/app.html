@@ -32,6 +32,7 @@
 						<div class="navbar-start">
 							<a @click.prevent="loadPage('homepage')" class="navbar-item" href="/">Home</a>
 							<a v-show="isLoggedIn" @click.prevent="loadPage('tasks')" class="navbar-item" href="/">Tasks</a>
+							<a @click.prevent="notify" class="navbar-item" href="/notify">Notify</a>
 						</div>
 
 						<div class="navbar-end">
@@ -87,6 +88,8 @@
 					<signup-modal></signup-modal>
 				</div>
 			</div>
+
+			<notifications></notifications>
 		</div>
 
 		<!-- Pages -->
@@ -373,8 +376,27 @@
 			</div>
 		</script>
 
+		<!-- Notifications -->
+		<script type="text/template" id="notifications-template">
+			<ul class="notifications">
+				<li v-for="note in notes">
+					<div class="notify">
+						<p>${note.message}</p>
+					</div>
+				</li>
+			</ul>
+		</script>
+
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.0/vue.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
+		<script>
+		var proSettings = {
+			baseurl: "http://mindescalation.com:5100"
+		};
+		if (window.location.href.indexOf("mindescalation") <= 0) {
+			proSettings.baseurl = "http://127.0.0.1:5100";
+		}
+		</script>
 		<script src="/assets/js/app.js"></script>
 	</body>
 </html>

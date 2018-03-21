@@ -5,6 +5,10 @@ html, body {
 	font-family: 'Open Sans', sans-serif;
 }
 
+#app {
+	position: relative;
+}
+
 .section {
 	padding: 20px;
 }
@@ -193,3 +197,26 @@ ul.tasks {
 .modal .modal-background {
 	cursor: pointer;
 }
+
+ul.notifications {
+	margin: 0;
+	padding: 0;
+	position: fixed;
+	bottom: 20px;
+	right: 25px;
+}
+	ul.notifications > li {
+		display: block;
+		margin-bottom: 15px;
+		text-align: right;
+	}
+
+	ul.notifications > li > .notify {
+		display: inline-block;
+		max-width: 200px;
+		padding: 10px;
+		background-color: #00d1b2;
+		color: #fff;
+		border-radius: 6px;
+		text-align: left;
+	}

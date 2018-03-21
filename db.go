@@ -7,7 +7,10 @@ import (
 	"log"
 )
 
-var Migrations map[string]interface{}
+var (
+	Migrations   map[string]interface{}
+	databaseName = "pro"
+)
 
 func init() {
 	Migrations = make(map[string]interface{})
@@ -37,4 +40,47 @@ func dbMigrate() {
 		log.Println(fmt.Sprintf("[+] \"%v\" migrated", name))
 	}
 	log.Println("[#] Migrations completed")
+}
+
+func dbTestData() {
+	log.Println("[@] Inserting test data")
+	user := NewUser("tr3nx", "me@tr3nx.net", "pass")
+	err := user.Save()
+	if err != nil {
+		log.Println("[?] Test data already loaded?")
+		return
+	}
+	log.Println("[#] Test data loaded")
+}
+
+func dbCreateDatabase() error {
+	stmt, err := db.Prepare(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %v", databaseName))
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec()
+	if err != nil {
+		return err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func dbDropDatabase() error {
+	stmt, err := db.Prepare(fmt.Sprintf("DROP DATABASE IF EXISTS %v", databaseName))
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec()
+	if err != nil {
+		return err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
 }

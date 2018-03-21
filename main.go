@@ -8,9 +8,10 @@ import (
 )
 
 var (
-	db   *sql.DB
-	ip   = "127.0.0.1"
-	port = "5000"
+	db    *sql.DB
+	ip    = "127.0.0.1"
+	port  = "5000"
+	clean = true
 )
 
 func init() {
@@ -24,7 +25,12 @@ func init() {
 func main() {
 	defer db.Close()
 
-	dbMigrate()
+	if clean {
+		dbDropDatabase()
+		dbCreateDatabase()
+		dbMigrate()
+		dbTestData()
+	}
 
 	handleHttp()
 

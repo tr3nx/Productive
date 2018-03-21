@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -79,6 +80,11 @@ func groupsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if postdata.Label == "" {
+		jsonError(w, errors.New("Label is required"))
+		return
+	}
+
 	group := NewGroup(postdata.Label, postdata.Userid, postdata.Order)
 
 	err = group.Save()
@@ -86,7 +92,7 @@ func groupsCreate(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err)
 		return
 	}
-	jsonData(w, *group)
+	jsonData(w, group)
 }
 
 func groupsEdit(w http.ResponseWriter, r *http.Request) {

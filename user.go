@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -34,7 +35,30 @@ func NewUser(username, password, email string) *User {
 	}
 }
 
+func (u *User) Exists() bool {
+	rows, err := db.Query("SELECT id FROM `users` WHERE username=?", u.Username)
+	if err != nil {
+		return false
+	}
+	err = rows.Err()
+	if err != nil {
+		return false
+	}
+	defer rows.Close()
+	for rows.Next() {
+		return true
+	}
+	return false
+}
+
 func (u *User) Save() error {
+	if u.Exists() {
+		return errors.New("User already exists")
+	}
+	return u.save()
+}
+
+func (u *User) save() error {
 	stmt, err := db.Prepare(fmt.Sprintf("INSERT INTO `users`(%v) VALUES(?, ?, ?, ?, ?)", joinFields(userfields[1:])))
 	if err != nil {
 		return err
@@ -84,7 +108,7 @@ func (u *User) Delete() error {
 }
 
 func UsersCreateTable() error {
-	stmt, err := db.Prepare("CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `username` VARCHAR(64) NOT NULL, `password` VARCHAR(255) NOT NULL, `email` VARCHAR(64) NOT NULL, `token` VARCHAR(64) NOT NULL, `created` BIGINT NOT NULL)")
+	stmt, err := db.Prepare("CREATE TABLE `users` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `username` VARCHAR(64) NOT NULL UNIQUE, `password` VARCHAR(255) NOT NULL, `email` VARCHAR(64) NOT NULL UNIQUE, `token` VARCHAR(64) NOT NULL UNIQUE, `created` BIGINT NOT NULL)")
 	if err != nil {
 		return err
 	}

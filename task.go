@@ -15,7 +15,7 @@ type Task struct {
 	Groupid   int    `json:"groupid"`
 	Userid    int    `json:"userid"`
 	Order     int    `json:"order"`
-	Completed int64  `json:"completed"`
+	Completed bool   `json:"completed"`
 	Created   int64  `json:"created"`
 }
 
@@ -28,7 +28,7 @@ func init() {
 	log.Println("[#] Tasks module loading...")
 }
 
-func NewTask(label string, groupid, userid, order int, completed int64) *Task {
+func NewTask(label string, groupid, userid, order int, completed bool) *Task {
 	return &Task{
 		Label:     label,
 		Groupid:   groupid,
@@ -89,7 +89,7 @@ func (t *Task) Delete() error {
 }
 
 func TasksCreateTable() error {
-	stmt, err := db.Prepare("CREATE TABLE `tasks` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `label` VARCHAR(255) NOT NULL, `groupid` INTEGER NOT NULL, `userid` INTEGER NOT NULL, `order` INTEGER NOT NULL, `completed` BIGINT NULL DEFAULT NULL, `created` BIGINT NOT NULL)")
+	stmt, err := db.Prepare("CREATE TABLE `tasks` (`id` INTEGER PRIMARY KEY AUTO_INCREMENT, `label` VARCHAR(255) NOT NULL, `groupid` INTEGER NOT NULL, `userid` INTEGER NOT NULL, `order` INTEGER NOT NULL, `completed` TINYINT NULL DEFAULT NULL, `created` BIGINT NOT NULL)")
 	if err != nil {
 		return err
 	}

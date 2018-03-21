@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func taskHandlers(r *mux.Router) {
@@ -82,9 +82,14 @@ func tasksCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var completed int64
+	if postdata.Label == "" {
+		jsonError(w, errors.New("Label is required"))
+		return
+	}
+
+	var completed bool
 	if postdata.Completed {
-		completed = time.Now().Unix()
+		completed = true
 	}
 
 	task := NewTask(postdata.Label, postdata.Groupid, postdata.Userid, postdata.Order, completed)
@@ -160,7 +165,6 @@ func tasksEdit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if postdata.Completed {
-		task.Completed = time.Now().Unix()
 		err = task.UpdateField("Completed", task.Completed)
 		if err != nil {
 			jsonError(w, err)
